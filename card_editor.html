@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 考核报告二次编辑与卡片预览 - 控制中心</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #090d16;
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            
+            --glow-cyan: rgba(6, 182, 212, 0.15);
+            --glow-red: rgba(239, 68, 68, 0.25);
+            --glow-orange: rgba(245, 158, 11, 0.25);
+            --glow-blue: rgba(59, 130, 246, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.5) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* 顶部导航 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(9, 13, 22, 0.8);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        .logo-text h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #ffffff, #9ca3af);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator.online {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            border-radius: 8px;
+            background: rgba(6, 182, 212, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.15);
+        }
+
+        /* 布局主体 */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            padding: 32px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .editor-column, .preview-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(6, 182, 212, 0.20);
+        }
+
+        .panel-header {
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-header h2 svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-cyan);
+            fill: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.02);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.25);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-send:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-send:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-send.success {
+            background: #10b981 !important;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+        }
+
+        /* 飞书模拟卡片预览 */
+        .feishu-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            width: 100%;
+            color: #1f2329;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feishu-header {
+            padding: 16px 20px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            position: relative;
+            background: #ef4444;
+            transition: background 0.3s ease;
+        }
+
+        .feishu-header.red {
+            background: #d04b4b;
+        }
+        .feishu-header.orange {
+            background: #e9892e;
+        }
+        .feishu-header.blue {
+            background: #3370ff;
+        }
+
+        .feishu-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feishu-div-text {
+            color: #1f2329;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .feishu-hr {
+            height: 1px;
+            background-color: #dee0e3;
+            border: none;
+        }
+
+        .feishu-fields-box {
+            background-color: #f5f6f7;
+            border-radius: 4px;
+            padding: 12px;
+            border-left: 3px solid #dee0e3;
+        }
+
+        .feishu-fields-box.error-border {
+            border-left-color: #d04b4b;
+        }
+
+        .feishu-field-title {
+            font-weight: 600;
+            color: #1f2329;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .feishu-field-row {
+            margin-bottom: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .feishu-field-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .feishu-note-box {
+            background-color: #f5f6f7;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 12px;
+            color: #646a73;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .feishu-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .feishu-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #dee0e3;
+            background: #ffffff;
+            color: #1f2329;
+            transition: all 0.2s ease;
+        }
+
+        .feishu-btn.primary {
+            background: #3370ff;
+            border-color: #3370ff;
+            color: #ffffff;
+        }
+
+        .feishu-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* 浮动全局提示消息 */
+        #notif {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        #notif.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .action-container {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .pulse {
+            position: relative;
+        }
+
+        .pulse::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-radius: 8px;
+            box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4);
+            animation: pulse-effect 2s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulse-effect {
+            0% {
+                box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.6);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(6, 182, 212, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 浮动全局提示 -->
+    <div id="notif">通知消息</div>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>AI 考核报告独立编辑器</h1>
+                <p>Feishu Interactive Card Preview & Editor</p>
+            </div>
+        </div>
+        
+        <div class="system-status">
+            <a href="feishu_config.html" class="btn-back">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                返回配置与大盘设定
+            </a>
+            <div class="status-pill">
+                <span class="status-indicator online"></span>
+                <span>Antigravity Workflow Core: 运行中</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 左侧：报告手动二次编辑 (Conclusion Editor) -->
+        <div class="editor-column">
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-cyan)" fill="none" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        报告手动二次编辑 (Conclusion Editor)
+                    </h2>
+                </div>
+
+                <div class="action-container" style="margin-bottom: 20px;">
+                    <button class="btn btn-primary pulse" id="btn_generate_report" onclick="generateAndOpenEditor()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                        1. 诊断运行并生成报告结论
+                    </button>
+                </div>
+
+                <div id="editor_inputs_container" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s ease;">
+                    <div class="form-group">
+                        <label for="edit_title">报告标题 (Title)</label>
+                        <input type="text" id="edit_title" oninput="syncEditToPreview()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_status">大盘运行状态 (Status)</label>
+                        <select id="edit_status" onchange="syncEditToPreview()">
+                            <option value="success">SUCCESS (正常/蓝色)</option>
+                            <option value="warning">WARNING (警告/橙色)</option>
+                            <option value="danger" selected>DANGER (危险/红色)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_summary">运营快报总结 (Summary)</label>
+                        <textarea id="edit_summary" rows="3" oninput="syncEditToPreview()"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_diagnosis">AI 专家诊断细节 (一行为一条，支持格式如: [核心异常] 内容)</label>
+                        <textarea id="edit_diagnosis" rows="4" placeholder="每行输入一条异常诊断" oninput="syncEditToPreview()"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_suggestions">协同改善要求 (一行为一条建议)</label>
+                        <textarea id="edit_suggestions" rows="4" placeholder="每行输入一条建议" oninput="syncEditToPreview()"></textarea>
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <button class="btn btn-send" id="btn_send_card" onclick="sendFinalCard()">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                            </svg>
+                            <span id="send_btn_text">2. 确认无误，正式发送至飞书</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：飞书卡片动态效果预览 (Live Preview) -->
+        <div class="preview-column">
+            <div class="glass-panel" style="position: sticky; top: 100px;">
+                <div class="panel-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-cyan)" fill="none" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                            <line x1="7" y1="2" x2="7" y2="22"/>
+                            <line x1="17" y1="2" x2="17" y2="22"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                        </svg>
+                        飞书卡片动态效果预览 (Live Preview)
+                    </h2>
+                </div>
+
+                <div class="feishu-card" id="feishu_card_element">
+                    <!-- 卡片顶部 -->
+                    <div class="feishu-header red" id="card_header">
+                        物流调度部运营分析与 AI 定责考核报告 (2026-06-08)
+                    </div>
+                    
+                    <!-- 卡片内容 -->
+                    <div class="feishu-body">
+                        <!-- 总结 -->
+                        <div class="feishu-div-text" id="card_summary" style="font-weight: 500;">
+                            📢 <b>运营快报：</b><br>
+                            请点击左侧“1. 诊断运行并生成报告结论”以生成今日的 analysis 卡片预览。
+                        </div>
+                        
+                        <div class="feishu-hr"></div>
+                        
+                        <!-- 字段块 -->
+                        <div class="feishu-fields-box error-border" id="card_metrics_box">
+                            <div class="feishu-field-title">📊 指标快览：</div>
+                            <div id="card_metrics_list">
+                                <div class="feishu-field-row" style="color: var(--text-secondary); font-style: italic;">
+                                    (生成诊断后在此处展示核心考核指标)
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="feishu-hr"></div>
+                        
+                        <!-- AI 诊断 -->
+                        <div class="feishu-note-box" id="card_note">
+                            🔍 <b>AI 专家诊断方案：</b><br>
+                            <span style="color: var(--text-secondary); font-style: italic;">(生成诊断后在此处显示详细定责与追溯信息)</span>
+                        </div>
+                        
+                        <div class="feishu-hr"></div>
+                        
+                        <!-- 动作按钮 -->
+                        <div class="feishu-actions">
+                            <div class="feishu-btn primary">📥 转为跟进工单</div>
+                            <div class="feishu-btn">❓ 申诉/误报反馈</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastGeneratedReport = null;
+
+        function showNotification(message, type = 'info') {
+            const notif = document.getElementById('notif');
+            notif.innerText = message;
+            
+            if (type === 'success') {
+                notif.style.background = 'rgba(16, 185, 129, 0.9)';
+            } else if (type === 'error') {
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+            } else {
+                notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            }
+            
+            notif.classList.add('show');
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 4000);
+        }
+
+        // 初始化加载上一次的数据，如果有的话
+        window.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('lastGeneratedReport');
+            if (stored) {
+                try {
+                    const report = JSON.parse(stored);
+                    lastGeneratedReport = report;
+                    
+                    // 开启编辑区域交互
+                    const container = document.getElementById('editor_inputs_container');
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
+                    
+                    // 填入编辑字段
+                    document.getElementById('edit_title').value = report.title || '';
+                    document.getElementById('edit_status').value = report.status || 'danger';
+                    document.getElementById('edit_summary').value = report.summary || '';
+                    
+                    const diagText = (report.diagnosis_details || [])
+                        .map(d => (d.type ? `[${d.type}] ` : '') + d.content)
+                        .join('\n');
+                    document.getElementById('edit_diagnosis').value = diagText;
+
+                    const sugText = (report.action_suggestions || [])
+                        .join('\n');
+                    document.getElementById('edit_suggestions').value = sugText;
+
+                    // 同步到 Live 飞书预览
+                    syncEditToPreview();
+                    
+                    showNotification('报告诊断已成功加载！您可以在左侧微调编辑，右侧将实时预览。', 'success');
+                } catch(e) {
+                    console.error("Failed to parse stored report", e);
+                }
+            } else {
+                // 尝试静默拉取可能已存在的报告以填充页面
+                fetch('/api/get_config')
+                    .then(res => res.json())
+                    .then(data => {
+                        // 如果大盘有初始渲染需求
+                    })
+                    .catch(err => console.log("Init fetch skipped or error:", err));
+            }
+        });
+
+        function generateAndOpenEditor() {
+            showNotification('正在运行诊断，提取指标数据并调用 AI 专家生成报告草稿...', 'info');
+
+            const btn = document.getElementById('btn_generate_report');
+            btn.disabled = true;
+            btn.innerText = '正在生成诊断中...';
+
+            fetch('/api/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    lastGeneratedReport = data.report;
+                    
+                    // 开启编辑区域交互
+                    const container = document.getElementById('editor_inputs_container');
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
+                    
+                    // 填入编辑字段
+                    document.getElementById('edit_title').value = lastGeneratedReport.title || '';
+                    document.getElementById('edit_status').value = lastGeneratedReport.status || 'danger';
+                    document.getElementById('edit_summary').value = lastGeneratedReport.summary || '';
+                    
+                    const diagText = (lastGeneratedReport.diagnosis_details || [])
+                        .map(d => (d.type ? `[${d.type}] ` : '') + d.content)
+                        .join('\n');
+                    document.getElementById('edit_diagnosis').value = diagText;
+
+                    const sugText = (lastGeneratedReport.action_suggestions || [])
+                        .join('\n');
+                    document.getElementById('edit_suggestions').value = sugText;
+
+                    // 同步到 Live 飞书预览
+                    syncEditToPreview();
+
+                    showNotification('报告诊断已生成！您可以在左侧微调编辑，右侧将实时预览。', 'success');
+                } else {
+                    showNotification('生成诊断报告失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(err => {
+                showNotification('生成报告请求失败: ' + err.message, 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v8M8 12h8"/>
+                </svg>1. 诊断运行并生成报告结论`;
+            });
+        }
+
+        function syncEditToPreview() {
+            const title = document.getElementById('edit_title').value;
+            const status = document.getElementById('edit_status').value;
+            const summary = document.getElementById('edit_summary').value;
+            const diagLines = document.getElementById('edit_diagnosis').value.split('\n').filter(l => l.trim() !== '');
+            const sugLines = document.getElementById('edit_suggestions').value.split('\n').filter(l => l.trim() !== '');
+
+            // 1. 更新标题与颜色样式
+            const header = document.getElementById('card_header');
+            header.innerText = title;
+            header.className = 'feishu-header';
+            if (status === 'danger') {
+                header.classList.add('red');
+            } else if (status === 'warning') {
+                header.classList.add('orange');
+            } else {
+                header.classList.add('blue');
+            }
+
+            // 2. 更新运营快报
+            const summaryBox = document.getElementById('card_summary');
+            summaryBox.innerHTML = `📢 <b>运营快报：</b><br>${summary.replace(/\n/g, '<br>')}`;
+
+            // 3. 更新指标卡边框色与指标渲染
+            const metricsBox = document.getElementById('card_metrics_box');
+            if (metricsBox) {
+                if (status === 'danger') {
+                    metricsBox.className = 'feishu-fields-box error-border';
+                } else {
+                    metricsBox.className = 'feishu-fields-box';
+                }
+            }
+
+            // 动态绘制指标
+            const metricsList = document.getElementById('card_metrics_list');
+            if (lastGeneratedReport && lastGeneratedReport.metrics_display) {
+                let metricsHtml = `
+                    <table style="width:100%; border-collapse: collapse; text-align: left; font-size: 13px; margin-top: 8px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #dee0e3;">
+                                <th style="padding: 8px 4px; font-weight: 600;">指标名称</th>
+                                <th style="padding: 8px 4px; font-weight: 600; text-align: center;">实际数值</th>
+                                <th style="padding: 8px 4px; font-weight: 600; text-align: center;">判定状态</th>
+                                <th style="padding: 8px 4px; font-weight: 600;">规则拦截与备注</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                lastGeneratedReport.metrics_display.forEach(m => {
+                    const icon = m.status === '异常' ? '🔴' : '🟢';
+                    metricsHtml += `
+                            <tr style="border-bottom: 1px solid #f0f1f2;">
+                                <td style="padding: 8px 4px;">${icon} ${m.name}</td>
+                                <td style="padding: 8px 4px; text-align: center;"><code>${m.value}</code></td>
+                                <td style="padding: 8px 4px; text-align: center;">${m.status}</td>
+                                <td style="padding: 8px 4px; color: #646a73; font-size: 0.8rem;">${m.rule_triggered}</td>
+                            </tr>
+                    `;
+                });
+                metricsHtml += `
+                        </tbody>
+                    </table>
+                `;
+                metricsList.innerHTML = metricsHtml;
+            }
+
+            // 4. 更新诊断方案与改善协同
+            const noteBox = document.getElementById('card_note');
+            let noteHtml = '🔍 <b>AI 专家诊断方案：</b><br>';
+            diagLines.forEach(line => {
+                const prefix = line.startsWith('⚠️') ? '' : '⚠️ ';
+                noteHtml += `${prefix}${line}<br>`;
+            });
+
+            if (sugLines.length > 0) {
+                noteHtml += '<br>📋 <b>协同改善要求：</b><br>';
+                sugLines.forEach((line, idx) => {
+                    const numMatch = line.match(/^(\d+)\.\s*/);
+                    const prefix = numMatch ? '' : `&nbsp;${idx + 1}. `;
+                    noteHtml += `${prefix}${line}<br>`;
+                });
+            }
+            noteBox.innerHTML = noteHtml;
+        }
+
+        function sendFinalCard() {
+            const btn = document.getElementById('btn_send_card');
+            const btnText = document.getElementById('send_btn_text');
+            
+            btn.disabled = true;
+            btnText.innerText = '正在调用飞书 API 分发卡片中...';
+            showNotification('正在调用飞书 API 分发卡片中...', 'info');
+
+            const title = document.getElementById('edit_title').value.trim();
+            const status = document.getElementById('edit_status').value;
+            const summary = document.getElementById('edit_summary').value.trim();
+            const diagLines = document.getElementById('edit_diagnosis').value.split('\n').filter(l => l.trim() !== '');
+            const sugLines = document.getElementById('edit_suggestions').value.split('\n').filter(l => l.trim() !== '');
+
+            const diagnosisDetails = diagLines.map(line => {
+                const match = line.match(/^\[(.*?)\]\s*(.*)$/);
+                if (match) {
+                    return { type: match[1], content: match[2] };
+                }
+                const cleanLine = line.replace(/^⚠️\s*/, '');
+                return { type: '核心异常', content: cleanLine };
+            });
+
+            const actionSuggestions = sugLines.map(line => line.replace(/^\d+\.\s*/, ''));
+
+            const payload = {
+                report: {
+                    status: status,
+                    title: title,
+                    summary: summary,
+                    metrics_display: lastGeneratedReport ? lastGeneratedReport.metrics_display : [],
+                    diagnosis_details: diagnosisDetails,
+                    action_suggestions: actionSuggestions
+                }
+            };
+
+            fetch('/api/send_edited_card', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('卡片已成功分发至飞书！', 'success');
+                    btn.classList.add('success');
+                    btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>卡片分发成功`;
+                } else {
+                    showNotification('卡片分发失败: ' + (data.error || '未知错误'), 'error');
+                    btn.disabled = false;
+                    btnText.innerText = '2. 确认无误，正式发送至飞书';
+                }
+            })
+            .catch(err => {
+                showNotification('请求分发失败: ' + err.message, 'error');
+                btn.disabled = false;
+                btnText.innerText = '2. 确认无误，正式发送至飞书';
+            });
+        }
+    </script>
+</body>
+</html>

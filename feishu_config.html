@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流调度部 AI 报告与飞书分发系统配置中心</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #090d16;
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            
+            --glow-cyan: rgba(6, 182, 212, 0.15);
+            --glow-red: rgba(239, 68, 68, 0.25);
+            --glow-orange: rgba(245, 158, 11, 0.25);
+            --glow-blue: rgba(59, 130, 246, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.5) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* 顶部导航 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(9, 13, 22, 0.8);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        .logo-text h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #ffffff, #9ca3af);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator.online {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        /* 布局主体 */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+            padding: 32px 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* 左侧配置栏 */
+        .config-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(6, 182, 212, 0.2);
+        }
+
+        .panel-header {
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 14px;
+        }
+
+        .panel-header h2 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-header h2 svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-cyan);
+            fill: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 5px;
+            outline: none;
+            accent-color: var(--accent-cyan);
+        }
+
+        .slider-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            min-width: 45px;
+            text-align: right;
+        }
+
+        /* 右侧预览栏 */
+        .preview-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: sticky;
+            top: 100px;
+            align-self: start;
+        }
+
+        /* 飞书卡片 Live 渲染 */
+        .feishu-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            width: 100%;
+            color: #1f2329;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feishu-header {
+            padding: 16px 20px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            position: relative;
+            background: var(--accent-red); /* danger default */
+            transition: background 0.3s ease;
+        }
+
+        .feishu-header.red {
+            background: #d04b4b; /* danger theme */
+        }
+        .feishu-header.orange {
+            background: #e9892e; /* warning theme */
+        }
+        .feishu-header.blue {
+            background: #3370ff; /* success theme */
+        }
+
+        .feishu-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feishu-div-text {
+            color: #1f2329;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .feishu-hr {
+            height: 1px;
+            background-color: #dee0e3;
+            border: none;
+        }
+
+        .feishu-fields-box {
+            background-color: #f5f6f7;
+            border-radius: 4px;
+            padding: 12px;
+            border-left: 3px solid #dee0e3;
+        }
+
+        .feishu-fields-box.error-border {
+            border-left-color: #d04b4b;
+        }
+
+        .feishu-field-title {
+            font-weight: 600;
+            color: #1f2329;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .feishu-field-row {
+            margin-bottom: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .feishu-field-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .feishu-note-box {
+            background-color: #f5f6f7;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 12px;
+            color: #646a73;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .feishu-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .feishu-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #dee0e3;
+            background: #ffffff;
+            color: #1f2329;
+            transition: all 0.2s ease;
+        }
+
+        .feishu-btn.primary {
+            background: #3370ff;
+            border-color: #3370ff;
+            color: #ffffff;
+        }
+
+        .feishu-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* 按钮与交互 */
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.25);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 动画与反馈 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            background: rgba(16, 185, 129, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 500;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+        }
+
+        /* 可读性校验提示 */
+        .validation-status {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: 500;
+        }
+        .validation-status.valid {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+        .validation-status.invalid {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+        }
+        .validation-status.loading {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+        }
+
+        /* 选项卡导航 */
+        .tab-navigation {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* 规则卡片 */
+        .rule-card-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 140px;
+            gap: 24px;
+            align-items: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .rule-card-item:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .rule-card-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .capacity-card-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 120px;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 16px;
+            align-items: end;
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+            color: #ef4444 !important;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.25) !important;
+        }
+
+        .backup-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding-right: 8px;
+        }
+
+        .backup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+        }
+
+        .backup-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .backup-name {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            word-break: break-all;
+        }
+
+        .backup-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Extractor Tab styles */
+        #extractor_drop_zone.dragover {
+            border-color: var(--accent-cyan) !important;
+            background: rgba(6, 182, 212, 0.1) !important;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+        }
+        .extracted-item {
+            background: rgba(16, 185, 129, 0.03);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .extracted-item:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+        }
+        .extracted-capacity-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 100px;
+            gap: 20px;
+            background: rgba(16, 185, 129, 0.03);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 12px;
+            padding: 16px 20px;
+            align-items: end;
+        }
+        .extractor-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--accent-cyan);
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 20px;
+            border: 1px dashed rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .extractor-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(6, 182, 212, 0.3);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .system-status-container {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .btn-to-editor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            border-radius: 8px;
+            background: rgba(6, 182, 212, 0.05);
+            transition: all 0.3s ease;
+        }
+        .btn-to-editor:hover {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.15);
+        }
+        .svg-cyan {
+            stroke: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>物流调度 AI 报告控制中心</h1>
+                <p>Feishu Interactive Card Manager</p>
+            </div>
+        </div>
+        
+        <div class="system-status system-status-container">
+            <a href="card_editor.html" class="btn-to-editor">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="svg-cyan">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                前往独立编辑器与预览
+            </a>
+            <div class="status-pill">
+                <span class="status-indicator online"></span>
+                <span>Antigravity Workflow Core: 运行中</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 左侧配置表单 -->
+        <div class="config-main">
+            <!-- 导航选项卡 -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" id="btn_tab_system_config" onclick="switchTab('system_config')">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>
+                    </svg>
+                    通道与大盘设定
+                </button>
+                <button class="tab-btn" id="btn_tab_rules_manager" onclick="switchTab('rules_manager')">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    静态规则库管理
+                </button>
+                <button class="tab-btn" id="btn_tab_rules_extractor" onclick="switchTab('rules_extractor')">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                    智能规则解析与转换
+                </button>
+            </div>
+
+            <div id="tab_system_config" class="tab-content active">
+                <!-- 模块一：飞书通知通道配置 -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <rect x="2" y="4" width="20" height="16" rx="2" stroke-width="2"/>
+                            <path d="M12 11l-8-5v10l8-5z" stroke-width="2"/>
+                        </svg>
+                        飞书通知通道配置
+                    </h2>
+                </div>
+                
+                <div class="form-group">
+                    <label for="channel_select">分发通道选择</label>
+                    <select id="channel_select" onchange="toggleChannelInputs()">
+                        <option value="webhook" selected>自定义群机器人 Webhook (支持外部群/群自建)</option>
+                        <option value="app_api">企业自建应用 API (支持企业管理员禁用机器人时的替代方案)</option>
+                    </select>
+                </div>
+
+                <!-- Webhook 字段容器 -->
+                <div id="webhook_inputs">
+                    <div class="form-group">
+                        <label for="webhook_url">飞书 Webhook 目标地址 (URL)</label>
+                        <input type="text" id="webhook_url" value="https://open.feishu.cn/open-apis/bot/v2/hook/f3a8d94e-289c-4f11-9ab7-bb703b41e3d0" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="security_type">安全校验类型</label>
+                            <select id="security_type">
+                                <option value="none">无校验 (IP白名单)</option>
+                                <option value="secret" selected>签名校验 (Secret Key)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="secret_key">签名密钥 (Secret)</label>
+                            <input type="text" id="secret_key" value="kL7yP29sN1zB6mA4" placeholder="未启用签名校验时留空">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自建应用 API 字段容器 -->
+                <div id="app_inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="app_id">飞书应用凭证 (App ID)</label>
+                        <input type="text" id="app_id" value="" placeholder="例如: cli_a3b2c1d0e9f8">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="app_secret">飞书应用密钥 (App Secret)</label>
+                            <input type="text" id="app_secret" value="" placeholder="自建应用开发者后台查看">
+                        </div>
+                        <div class="form-group">
+                            <label for="chat_id">接收群聊 ID (Chat ID)</label>
+                            <input type="text" id="chat_id" value="" placeholder="例如: oc_8d3e91bcf217">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模块二：静态 KPI 警戒红线设定 -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" stroke-width="2">
+                            <path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                        </svg>
+                        静态指标考核红线值
+                    </h2>
+                </div>
+
+                <div id="dynamic_kpi_sliders_container" style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- 动态生成的 KPI 滑块将插入此处 -->
+                </div>
+            </div>
+
+            <!-- 模块三：AI 诊断模型与环境 -->
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        AI 智能诊断引擎与自定义模型配置
+                    </h2>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="llm_api_key">大模型 API 密钥 (API Key)</label>
+                        <input type="text" id="llm_api_key" placeholder="例如: sk-..., 支持 OpenAI / DeepSeek 等">
+                    </div>
+                    <div class="form-group">
+                        <label for="llm_api_base">大模型接口地址 (Base URL)</label>
+                        <input type="text" id="llm_api_base" placeholder="例如: https://api.openai.com/v1 或代理端点">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="llm_model">大模型模型名称 (Model Name)</label>
+                        <input type="text" id="llm_model" list="model_list" placeholder="双击/点击选择，或手动输入自定义模型">
+                        <datalist id="model_list">
+                            <option value="gemini-2.5-flash">Google Gemini 2.5 Flash</option>
+                            <option value="gemini-2.5-pro">Google Gemini 2.5 Pro</option>
+                            <option value="gemini-2.0-flash">Google Gemini 2.0 Flash</option>
+                            <option value="gemini-1.5-flash">Google Gemini 1.5 Flash</option>
+                            <option value="gemini-1.5-pro">Google Gemini 1.5 Pro</option>
+                            <option value="gpt-4o">OpenAI GPT-4o</option>
+                            <option value="gpt-4o-mini">OpenAI GPT-4o Mini</option>
+                            <option value="gpt-4-turbo">OpenAI GPT-4 Turbo</option>
+                            <option value="deepseek-chat">DeepSeek V3 (deepseek-chat)</option>
+                            <option value="deepseek-coder">DeepSeek Coder</option>
+                            <option value="deepseek-reasoner">DeepSeek R1 (deepseek-reasoner)</option>
+                            <option value="claude-3-5-sonnet-latest">Anthropic Claude 3.5 Sonnet</option>
+                            <option value="claude-3-5-haiku-latest">Anthropic Claude 3.5 Haiku</option>
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="report_status">全局大盘状态判定方式</label>
+                        <select id="report_status" onchange="syncCardHeaderColor()">
+                            <option value="danger" selected>一票否决制：任意考核指标未达标为 DANGER (红色)</option>
+                            <option value="warning">加权打分制：综合计算得分处于 60-80 为 WARNING (橙色)</option>
+                            <option value="success">全员通过制：需手动批准或仅无核心异常时为 SUCCESS (蓝色)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>提示词环境预设 (Prompt Templates)</label>
+                        <select id="prompt_env_selector" title="提示词模板选择" onchange="changePromptEnv()">
+                            <option value="default" selected>默认常规考核</option>
+                            <option value="strict">严格模式 (大促/双十一)</option>
+                            <option value="encouraging">鼓励模式 (淡季/团建期)</option>
+                            <option value="detailed">极度详细 (异常深挖版)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="llm_custom_prompt">自定义诊断提示词 (System Prompt)</label>
+                        <textarea id="llm_custom_prompt" rows="4" placeholder="输入大模型生成报告时使用的系统提示词（留空将使用内部默认提示词）..."></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="resetConfig()">重置配置</button>
+                    <button class="btn btn-primary" onclick="saveConfiguration()">保存并同步 rules.json</button>
+                </div>
+
+                <!-- 模块四：报告诊断与分发入口 -->
+                <div class="glass-panel" style="border: 1px solid rgba(6, 182, 212, 0.25); background: rgba(6, 182, 212, 0.03); margin-top: 24px;">
+                    <div class="panel-header">
+                        <h2>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                            运行报告诊断并生成结论
+                        </h2>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
+                        运行物流网络诊断，通过 AI 专家大模型提取当前时效指标并生成定责考核报告。诊断生成后系统将自动跳转至独立编辑器与 Live 卡片预览中心进行二次编辑与分发。
+                    </p>
+                    <div class="btn-group">
+                        <button class="btn btn-primary pulse" id="btn_generate_report" style="height: 48px; background: linear-gradient(135deg, var(--accent-cyan), #0891b2);" onclick="generateAndOpenEditor()">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v8M8 12h8"/>
+                            </svg>
+                            运行诊断并生成报告结论
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- 关闭 tab_system_config -->
+
+            <!-- 选项卡二：静态规则库管理 -->
+            <div id="tab_rules_manager" class="tab-content">
+                <!-- 指标规则编辑 -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h2>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                            </svg>
+                            指标规则库设定 (Metrics Rules)
+                        </h2>
+                    </div>
+                    
+                    <div id="rules_metrics_list">
+                        <!-- 动态渲染 -->
+                    </div>
+                    
+                    <div class="btn-group" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="addNewMetricRow()">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            新增考核/通晒指标
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 车型载重定义 -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h2>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="3" width="15" height="13"/>
+                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                                <circle cx="5.5" cy="18.5" r="2.5"/>
+                                <circle cx="18.5" cy="18.5" r="2.5"/>
+                            </svg>
+                            车型财务容量标准 (Vehicle Capacity)
+                        </h2>
+                    </div>
+                    
+                    <div id="rules_capacity_list">
+                        <!-- 动态渲染 -->
+                    </div>
+                    
+                    <div class="btn-group" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="addNewCapacityRow()">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            新增车型与体积容量
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 备份与导入导出中心 -->
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h2>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            规则备份、导入与导出工具 (Backup & Snapshot)
+                        </h2>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="exportRulesFile()">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                            </svg>
+                            导出 rules.json 备份
+                        </button>
+                        <button class="btn btn-secondary" onclick="triggerImportFileInput()">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            导入 rules.json 备份
+                        </button>
+                        <input type="file" id="import_file_input" accept=".json" style="display: none;" onchange="importRulesFile()">
+                    </div>
+
+                    <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
+                        <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 15px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+                            <span>历史快照备份 (Timestamped Snapshot)</span>
+                            <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.75rem; flex: none;" onclick="createBackupSnapshot()">创建即时快照</button>
+                        </h3>
+                        
+                        <div class="backup-list" id="backup_list_container">
+                            <!-- 动态加载备份列表 -->
+                            <div style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; padding: 20px;">暂无历史快照备份</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 规则保存组 -->
+                <div class="glass-panel" style="background: rgba(6, 182, 212, 0.05);">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" style="height: 52px; font-size: 1.05rem;" onclick="saveAllRulesToServer()">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            保存并发布全部规则
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 选项卡三：智能规则解析与转换 -->
+            <div id="tab_rules_extractor" class="tab-content">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h2>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                            智能规则解析与转换 (Smart Rule Extractor)
+                        </h2>
+                    </div>
+                    
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
+                        您可以上传时效考核指标的规则图片（如截图、拍照图片）、文本文档，或者直接粘贴规则描述文本、网页链接。AI 诊断引擎将自动解析并提取出结构化的指标定义（包括指标名称、红线值、计算公式等）和车型财务容积配置。
+                    </p>
+
+                    <!-- 文件上传/拖拽区域 -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>图片或文档文件 (支持 PNG, JPG, WEBP, TXT, MD)</label>
+                        <div id="extractor_drop_zone" style="border: 2px dashed rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 30px; text-align: center; background: rgba(0, 0, 0, 0.25); cursor: pointer; transition: all 0.3s ease; position: relative;">
+                            <input type="file" id="extractor_file_input" accept="image/*,.txt,.md" style="display: none;" onchange="handleExtractorFileSelect()">
+                            <svg viewBox="0 0 24 24" width="36" height="36" stroke="var(--accent-cyan)" fill="none" stroke-width="2" style="margin-bottom: 12px; display: inline-block;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                            </svg>
+                            <p id="extractor_upload_text" style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500;">拖拽图片/文档至此，或 <span style="color: var(--accent-cyan);">点击上传</span></p>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px;">支持指标规则截图 OCR 解析或纯文本说明解析</p>
+                        </div>
+                    </div>
+
+                    <!-- 粘贴文本 / 链接 -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="extractor_text_input">或粘贴规则描述文本 / 网页链接</label>
+                        <textarea id="extractor_text_input" rows="4" placeholder="粘贴您的规则说明文字，或粘贴数据源文档链接... 例如：发车准点率红线值为 95%。超出计划发车时间未打卡或本站无发车但下一站已到车记为晚点。"></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="btn_run_extractor" style="height: 48px;" onclick="runRuleExtraction()">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v8M8 12h8"/>
+                            </svg>
+                            AI 智能解析并提取规则
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 提取出的规则结果面板 (默认隐藏) -->
+                <div class="glass-panel" id="extracted_results_panel" style="display: none; border-color: rgba(16, 185, 129, 0.3);">
+                    <div class="panel-header" style="border-bottom-color: rgba(16, 185, 129, 0.15);">
+                        <h2 style="color: var(--accent-green);">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent-green)" stroke-width="2" style="stroke: var(--accent-green);">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            AI 提取规则预览 (Extracted Rules Preview)
+                        </h2>
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px;">
+                        以下是 AI 引擎提取的时效指标与车型配置。您可以进行修改，确认无误后点击“追加保存”将其合并入系统规则库。
+                    </p>
+
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">📊 提取的指标规则：</h3>
+                    <div id="extracted_metrics_list" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                        <!-- 动态渲染提取的指标行 -->
+                    </div>
+
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-top: 25px; margin-bottom: 12px; color: var(--text-primary);">🚚 提取的车型容量配置：</h3>
+                    <div id="extracted_capacity_list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                        <!-- 动态渲染提取的车型行 -->
+                    </div>
+
+                    <div class="btn-group" style="margin-top: 20px; margin-bottom: 20px;">
+                        <button class="btn btn-secondary" onclick="addNewExtractedMetricRow()">新增指标项</button>
+                        <button class="btn btn-secondary" onclick="addNewExtractedCapacityRow()">新增车型项</button>
+                    </div>
+
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 20px;">
+                        <button class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); height: 50px; font-size: 1rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);" onclick="saveExtractedRulesToLibrary()">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            确认合并并保存到系统规则库
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notif">
+        配置已成功保存并同步至 config/rules.json！
+    </div>
+
+    <script>
+        let currentRulesConfig = { metrics: {}, vehicle_capacity: {} };
+
+        // 页面初始化时拉取当前已保存的配置
+        window.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/get_config')
+                .then(response => response.json())
+                .then(data => {
+                    // 保存当前的 rules 备份
+                    currentRulesConfig = data.rules_config || { metrics: {}, vehicle_capacity: {} };
+                    renderRulesManager();
+
+                    // 1. 填充飞书凭证配置
+                    const fs = data.feishu_config || {};
+                    if (fs.app_id && fs.app_secret && fs.chat_id) {
+                        document.getElementById('channel_select').value = 'app_api';
+                        document.getElementById('app_id').value = fs.app_id || '';
+                        document.getElementById('app_secret').value = fs.app_secret || '';
+                        document.getElementById('chat_id').value = fs.chat_id || '';
+                        toggleChannelInputs();
+                    } else {
+                        document.getElementById('channel_select').value = 'webhook';
+                        document.getElementById('webhook_url').value = fs.feishu_webhook || 'https://open.feishu.cn/open-apis/bot/v2/hook/YOUR-UUID';
+                        document.getElementById('secret_key').value = fs.feishu_secret || '';
+                        toggleChannelInputs();
+                    }
+
+                    // 填充大模型自定义配置
+                    document.getElementById('llm_api_key').value = fs.llm_api_key || '';
+                    document.getElementById('llm_api_base').value = fs.llm_api_base || '';
+                    document.getElementById('llm_model').value = fs.llm_model || 'gpt-4o';
+                    document.getElementById('llm_custom_prompt').value = fs.llm_custom_prompt || '';
+
+                    // 2. 动态渲染 KPI 设定数值
+                    renderDynamicKpiSliders();
+                })
+                .catch(err => {
+                    console.error('无法加载初始化配置:', err);
+                });
+        });
+
+        // 渲染动态 KPI 滑块
+        function renderDynamicKpiSliders() {
+            const container = document.getElementById('dynamic_kpi_sliders_container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const metrics = currentRulesConfig.metrics || {};
+            let html = '';
+            
+            // 筛选出定义了 red_line 的指标，或者强制让所有“考核”级别的都有滑块（这里采取读取已有 red_line 为准）
+            const kpiMetrics = Object.keys(metrics).filter(name => metrics[name].red_line !== undefined && metrics[name].red_line !== null);
+            
+            // 按每行两个组织
+            for (let i = 0; i < kpiMetrics.length; i += 2) {
+                html += '<div class="form-row">';
+                
+                // 第一个指标
+                const name1 = kpiMetrics[i];
+                const val1 = Math.round(metrics[name1].red_line * 100);
+                const id1 = 'kpi_dynamic_' + i;
+                html += `
+                    <div class="form-group">
+                        <label for="${id1}">${name1}红线 (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="${id1}" data-metric="${name1}" min="1" max="100" value="${val1}" oninput="updateDynamicKpiValue('${id1}')">
+                            <span class="slider-value" id="${id1}_val">${val1}%</span>
+                        </div>
+                    </div>
+                `;
+                
+                // 第二个指标（如果有）
+                if (i + 1 < kpiMetrics.length) {
+                    const name2 = kpiMetrics[i + 1];
+                    const val2 = Math.round(metrics[name2].red_line * 100);
+                    const id2 = 'kpi_dynamic_' + (i + 1);
+                    html += `
+                        <div class="form-group">
+                            <label for="${id2}">${name2}红线 (%)</label>
+                            <div class="slider-container">
+                                <input type="range" id="${id2}" data-metric="${name2}" min="1" max="100" value="${val2}" oninput="updateDynamicKpiValue('${id2}')">
+                                <span class="slider-value" id="${id2}_val">${val2}%</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `<div class="form-group" style="visibility: hidden;"></div>`; // 占位
+                }
+                
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function updateDynamicKpiValue(id) {
+            const input = document.getElementById(id);
+            const valSpan = document.getElementById(id + '_val');
+            if (valSpan && input) {
+                valSpan.innerText = input.value + '%';
+            }
+        }
+
+        // 选项卡切换逻辑
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.getElementById('btn_tab_' + tabId).classList.add('active');
+            document.getElementById('tab_' + tabId).classList.add('active');
+            
+            if (tabId === 'rules_manager') {
+                loadBackupList();
+            }
+        }
+
+        // 动态渲染规则配置
+        function renderRulesManager() {
+            const metricsContainer = document.getElementById('rules_metrics_list');
+            metricsContainer.innerHTML = '';
+            
+            const metrics = currentRulesConfig.metrics || {};
+            Object.entries(metrics).forEach(([name, meta]) => {
+                addNewMetricRow(name, meta.control_level, meta.data_source, meta.red_line, meta.description);
+            });
+            
+            const capacityContainer = document.getElementById('rules_capacity_list');
+            capacityContainer.innerHTML = '';
+            
+            const capacity = currentRulesConfig.vehicle_capacity || {};
+            Object.entries(capacity).forEach(([vType, cap]) => {
+                addNewCapacityRow(vType, cap);
+            });
+        }
+
+        // 新增/删除指标行
+        function addNewMetricRow(name='', controlLevel='考核', dataSource='', redLine='', description='') {
+            const metricsContainer = document.getElementById('rules_metrics_list');
+            const row = document.createElement('div');
+            row.className = 'rule-card-item';
+            row.innerHTML = `
+                <div class="rule-card-fields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>指标名称</label>
+                            <input type="text" class="metric-name" value="${name}" placeholder="如：班次发货及时率">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label>管控级别</label>
+                                <select class="metric-level">
+                                    <option value="考核" ${controlLevel === '考核' ? 'selected' : ''}>考核</option>
+                                    <option value="通晒" ${controlLevel === '通晒' ? 'selected' : ''}>通晒</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label>数据源配置 (需为飞书文档链接或DMS/TMS链接)</label>
+                                <input type="text" class="metric-source" value="${dataSource}" placeholder="https://feishu.cn/docx/... 或 DMS系统链接" oninput="triggerUrlValidation(this)">
+                                <div class="validation-status"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>考核红线值 (0~1之间小数，如 0.95。无红线则留空)</label>
+                            <input type="number" step="0.01" class="metric-redline" value="${redLine !== undefined && redLine !== '' ? redLine : ''}" placeholder="如：0.95">
+                        </div>
+                        <div class="form-group">
+                            <label>规则描述说明</label>
+                            <textarea class="metric-desc" rows="1" placeholder="规则判断的业务说明">${description}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="rule-card-actions" style="display:flex; justify-content:center;">
+                    <button class="btn btn-secondary delete-btn" style="width:100%;" onclick="deleteRow(this)">删除指标</button>
+                </div>
+            `;
+            metricsContainer.appendChild(row);
+
+            // 如果已经有填入的值，立即触发可读性校验
+            if (dataSource) {
+                const sourceInput = row.querySelector('.metric-source');
+                if (sourceInput) {
+                    triggerUrlValidation(sourceInput);
+                }
+            }
+        }
+
+        function addNewCapacityRow(vType='', cap='') {
+            const capacityContainer = document.getElementById('rules_capacity_list');
+            const row = document.createElement('div');
+            row.className = 'capacity-card-item';
+            row.innerHTML = `
+                <div class="form-group">
+                    <label>车型名称</label>
+                    <input type="text" class="capacity-vtype" value="${vType}" placeholder="如：9.6米车">
+                </div>
+                <div class="form-group">
+                    <label>装载体积/体积上限 (分母)</label>
+                    <input type="number" class="capacity-val" value="${cap}" placeholder="如：55">
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button class="btn btn-secondary delete-btn" style="height:46px; margin-bottom:20px; width:100%;" onclick="deleteRow(this)">删除</button>
+                </div>
+            `;
+            capacityContainer.appendChild(row);
+        }
+
+        function deleteRow(btn) {
+            const item = btn.closest('.rule-card-item') || btn.closest('.capacity-card-item');
+            if (item) {
+                item.remove();
+            }
+        }
+
+        // 同步 KPI 输入项回到第一页
+        function syncBasicKPIInputs() {
+            renderDynamicKpiSliders();
+        }
+
+        // 保存全部规则
+        function saveAllRulesToServer() {
+            const metrics = {};
+            const vehicle_capacity = {};
+            
+            const metricCards = document.querySelectorAll('#rules_metrics_list .rule-card-item');
+            metricCards.forEach(card => {
+                const nameInput = card.querySelector('.metric-name');
+                const levelSelect = card.querySelector('.metric-level');
+                const sourceInput = card.querySelector('.metric-source');
+                const redlineInput = card.querySelector('.metric-redline');
+                const descTextarea = card.querySelector('.metric-desc');
+                
+                const name = nameInput.value.trim();
+                if (!name) return;
+                
+                const meta = {
+                    control_level: levelSelect.value,
+                    data_source: sourceInput.value.trim(),
+                    description: descTextarea.value.trim()
+                };
+                
+                if (redlineInput.value.trim() !== '') {
+                    meta.red_line = parseFloat(redlineInput.value);
+                }
+                
+                metrics[name] = meta;
+            });
+            
+            const capacityCards = document.querySelectorAll('#rules_capacity_list .capacity-card-item');
+            capacityCards.forEach(card => {
+                const vtypeInput = card.querySelector('.capacity-vtype');
+                const valInput = card.querySelector('.capacity-val');
+                
+                const vtype = vtypeInput.value.trim();
+                const val = parseInt(valInput.value);
+                
+                if (vtype && !isNaN(val)) {
+                    vehicle_capacity[vtype] = val;
+                }
+            });
+            
+            const payload = {
+                metrics,
+                vehicle_capacity
+            };
+            
+            const notif = document.getElementById('notif');
+            notif.innerText = '正在保存规则修改到 rules.json...';
+            notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            notif.classList.add('show');
+            
+            fetch('/api/save_all_rules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    notif.innerText = '规则库已成功保存并同步！';
+                    notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                    currentRulesConfig = payload;
+                    syncBasicKPIInputs();
+                } else {
+                    notif.innerText = '保存失败: ' + (data.error || '未知错误');
+                    notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                }
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            })
+            .catch(err => {
+                notif.innerText = '保存失败: ' + err.message;
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            });
+        }
+
+        // 备份、导入、导出
+        function exportRulesFile() {
+            window.location.href = '/api/export_rules';
+        }
+
+        function triggerImportFileInput() {
+            document.getElementById('import_file_input').click();
+        }
+
+        function importRulesFile() {
+            const fileInput = document.getElementById('import_file_input');
+            if (!fileInput.files || fileInput.files.length === 0) return;
+            
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const notif = document.getElementById('notif');
+            notif.innerText = '正在导入并校验规则备份文件...';
+            notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            notif.classList.add('show');
+            
+            fetch('/api/import_rules', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    notif.innerText = '规则库导入并同步成功！';
+                    notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                    currentRulesConfig = data.rules_config;
+                    renderRulesManager();
+                    syncBasicKPIInputs();
+                } else {
+                    notif.innerText = '导入失败: ' + (data.error || '解析校验不通过');
+                    notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                }
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+                fileInput.value = '';
+            })
+            .catch(err => {
+                notif.innerText = '请求失败: ' + err.message;
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+                fileInput.value = '';
+            });
+        }
+
+        function createBackupSnapshot() {
+            const notif = document.getElementById('notif');
+            notif.innerText = '正在创建即时快照备份...';
+            notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            notif.classList.add('show');
+            
+            fetch('/api/create_backup', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    notif.innerText = '快照创建成功: ' + data.filename;
+                    notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                    loadBackupList();
+                } else {
+                    notif.innerText = '创建失败: ' + (data.error || '未知错误');
+                    notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                }
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            })
+            .catch(err => {
+                notif.innerText = '请求失败: ' + err.message;
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            });
+        }
+
+        function loadBackupList() {
+            const container = document.getElementById('backup_list_container');
+            fetch('/api/list_backups')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.backups.length > 0) {
+                    container.innerHTML = '';
+                    data.backups.forEach(bk => {
+                        const item = document.createElement('div');
+                        item.className = 'backup-item';
+                        const kb = (bk.size / 1024).toFixed(2);
+                        item.innerHTML = `
+                            <div class="backup-info">
+                                <span class="backup-name">${bk.filename}</span>
+                                <span class="backup-meta">创建时间: ${bk.created_at} | 大小: ${kb} KB</span>
+                            </div>
+                            <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.75rem; flex: none; border-color: rgba(6, 182, 212, 0.4); color: var(--accent-cyan);" onclick="restoreBackupSnapshot('${bk.filename}')">恢复备份</button>
+                        `;
+                        container.appendChild(item);
+                    });
+                } else {
+                    container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; padding: 20px;">暂无历史快照备份</div>';
+                }
+            })
+            .catch(err => {
+                console.error('无法加载备份列表:', err);
+                container.innerHTML = '<div style="text-align: center; color: #ef4444; font-size: 0.8rem; padding: 20px;">加载备份列表失败</div>';
+            });
+        }
+
+        function restoreBackupSnapshot(filename) {
+            if (!confirm(`确定要恢复备份 ${filename} 吗？这将会覆盖当前的所有规则配置！`)) return;
+            
+            const notif = document.getElementById('notif');
+            notif.innerText = '正在恢复规则配置...';
+            notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            notif.classList.add('show');
+            
+            fetch('/api/restore_backup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    notif.innerText = '规则配置已成功恢复！';
+                    notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                    currentRulesConfig = data.rules_config;
+                    renderRulesManager();
+                    syncBasicKPIInputs();
+                } else {
+                    notif.innerText = '恢复失败: ' + (data.error || '未知错误');
+                    notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                }
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            })
+            .catch(err => {
+                notif.innerText = '请求失败: ' + err.message;
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            });
+        }
+
+        function toggleChannelInputs() {
+            const channel = document.getElementById('channel_select').value;
+            if (channel === 'webhook') {
+                document.getElementById('webhook_inputs').style.display = 'block';
+                document.getElementById('app_inputs').style.display = 'none';
+            } else {
+                document.getElementById('webhook_inputs').style.display = 'none';
+                document.getElementById('app_inputs').style.display = 'block';
+            }
+        }
+
+        // 解决内联样式告警：清除内联样式并采用JS动态设置/隐藏
+        function toggleChannelInputsSafe() {
+            const channel = document.getElementById('channel_select').value;
+            const webhookDiv = document.getElementById('webhook_inputs');
+            const appDiv = document.getElementById('app_inputs');
+            if (channel === 'webhook') {
+                webhookDiv.removeAttribute('style');
+                appDiv.setAttribute('style', 'display: none;');
+            } else {
+                webhookDiv.setAttribute('style', 'display: none;');
+                appDiv.removeAttribute('style');
+            }
+        }
+
+        function updateKpiValue(id) {
+            const input = document.getElementById(id);
+            const valSpan = document.getElementById(id + '_val');
+            valSpan.innerText = input.value + '%';
+        }
+
+        function syncCardHeaderColor() {
+            const statusType = document.getElementById('report_status').value;
+            const header = document.getElementById('card_header');
+            
+            header.className = 'feishu-header';
+            
+            if (statusType === 'danger') {
+                header.classList.add('red');
+            } else if (statusType === 'warning') {
+                header.classList.add('orange');
+            } else {
+                header.classList.add('blue');
+            }
+        }
+
+        function changePromptEnv() {
+            const env = document.getElementById('prompt_env_selector').value;
+            const promptBox = document.getElementById('llm_custom_prompt');
+            
+            const templates = {
+                'default': '你是一个资深物流调度专家。请根据提供的时效数据和异常信息，输出专业的定责考核报告。语言客观中立。',
+                'strict': '你是一个非常严格的大促期物流风控专家。当前处于双十一/大促期间，任何轻微的延误都必须被严厉警告。请在报告中强调全员危机感，指出所有时效异常并要求1小时内给出整改方案。',
+                'encouraging': '你是一个充满活力的物流团队政委。目前处于业务淡季，请在指出问题的同时，多多鼓励团队，用词温和，强调持续优化，少用严厉的考核字眼。',
+                'detailed': '你是一个数据挖掘分析师。请极度详细地剖析每一个异常，推测可能的根因（如天气、运力不足、人员操作不规范等），给出多维度的行动建议。'
+            };
+            
+            if (templates[env]) {
+                promptBox.value = templates[env];
+            }
+        }
+
+        function saveConfiguration() {
+            const channel = document.getElementById('channel_select').value;
+            const webhookUrl = document.getElementById('webhook_url').value;
+            const secretKey = document.getElementById('secret_key').value;
+            const appId = document.getElementById('app_id').value;
+            const appSecret = document.getElementById('app_secret').value;
+            const chatId = document.getElementById('chat_id').value;
+
+            const llmApiKey = document.getElementById('llm_api_key').value;
+            const llmApiBase = document.getElementById('llm_api_base').value;
+            const llmModel = document.getElementById('llm_model').value;
+            const llmCustomPrompt = document.getElementById('llm_custom_prompt').value;
+
+            const dynamicKpis = {};
+            const sliderInputs = document.querySelectorAll('#dynamic_kpi_sliders_container input[type="range"]');
+            sliderInputs.forEach(input => {
+                const metricName = input.getAttribute('data-metric');
+                const val = parseFloat(input.value) / 100;
+                dynamicKpis[metricName] = val;
+            });
+
+            const payload = {
+                channel,
+                webhook_url: webhookUrl,
+                secret_key: secretKey,
+                app_id: appId,
+                app_secret: appSecret,
+                chat_id: chatId,
+                dynamic_kpis: dynamicKpis,
+                llm_api_key: llmApiKey,
+                llm_api_base: llmApiBase,
+                llm_model: llmModel,
+                llm_custom_prompt: llmCustomPrompt
+            };
+
+            const notif = document.getElementById('notif');
+            notif.innerText = '正在保存配置并更新本地文件...';
+            notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            notif.classList.add('show');
+
+            fetch('/api/save_config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    notif.innerText = '配置已保存！feishu_config.json 与 rules.json 已成功同步！';
+                    notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                } else {
+                    notif.innerText = '保存失败: ' + (data.error || '未知错误');
+                    notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                }
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            })
+            .catch(err => {
+                notif.innerText = '保存失败: ' + err.message;
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 3000);
+            });
+        }
+
+        let lastGeneratedReport = null;
+
+        function validateDataSourceUrl(url) {
+            if (!url) return { valid: false, message: '数据源链接不能为空' };
+            const lowerUrl = url.trim().toLowerCase();
+            const isFeishuDoc = lowerUrl.startsWith('https://feishu.cn/') || 
+                              lowerUrl.startsWith('https://www.feishu.cn/') || 
+                              lowerUrl.startsWith('https://bytedance.feishu.cn/') ||
+                              lowerUrl.startsWith('https://open.feishu.cn/') ||
+                              lowerUrl.startsWith('https://bytedance.larkoffice.com/') ||
+                              lowerUrl.includes('.feishu.cn/docx/') || 
+                              lowerUrl.includes('.feishu.cn/sheets/') || 
+                              lowerUrl.includes('.feishu.cn/wiki/') || 
+                              lowerUrl.includes('.feishu.cn/base/');
+            const isDmsUrl = lowerUrl.includes('/dms/') || 
+                            lowerUrl.includes('/gtracking/') || 
+                            lowerUrl.includes('dms-') ||
+                            lowerUrl.includes('/tms/');
+            
+            if (isFeishuDoc) {
+                return { valid: true, type: 'feishu', message: '飞书文档/多维表格格式校验通过' };
+            }
+            if (isDmsUrl) {
+                return { valid: true, type: 'dms', message: 'DMS/TMS系统链接格式校验通过' };
+            }
+            return { valid: false, message: '必须是合法的飞书文档(feishu.cn)或DMS页面链接' };
+        }
+
+        function triggerUrlValidation(inputEl) {
+            const val = inputEl.value.trim();
+            const validationStatusEl = inputEl.parentNode.querySelector('.validation-status');
+            if (!validationStatusEl) return;
+            
+            const localCheck = validateDataSourceUrl(val);
+            if (!localCheck.valid) {
+                validationStatusEl.innerText = '⚠️ ' + localCheck.message;
+                validationStatusEl.className = 'validation-status invalid';
+                return;
+            }
+            
+            validationStatusEl.innerText = '🔍 正在进行可读性校验...';
+            validationStatusEl.className = 'validation-status loading';
+            
+            fetch('/api/verify_url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: val })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    validationStatusEl.innerText = '✅ ' + data.message;
+                    validationStatusEl.className = 'validation-status valid';
+                } else {
+                    validationStatusEl.innerText = '❌ 可读性校验失败: ' + data.error;
+                    validationStatusEl.className = 'validation-status invalid';
+                }
+            })
+            .catch(err => {
+                validationStatusEl.innerText = '❌ 校验请求失败: ' + err.message;
+                validationStatusEl.className = 'validation-status invalid';
+            });
+        }
+
+        function generateAndOpenEditor() {
+            const notif = document.getElementById('notif');
+            notif.innerText = '正在运行诊断，提取指标数据并调用 AI 专家生成报告草稿...';
+            notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            notif.classList.add('show');
+
+            const btn = document.getElementById('btn_generate_report');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '正在生成诊断中...';
+            }
+
+            fetch('/api/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // 保存数据到 localStorage
+                    localStorage.setItem('lastGeneratedReport', JSON.stringify(data.report));
+                    
+                    notif.innerText = '报告诊断已生成！正在跳转到独立编辑器与预览中心...';
+                    notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'card_editor.html';
+                    }, 1000);
+                } else {
+                    notif.innerText = '生成诊断报告失败: ' + (data.error || '未知错误');
+                    notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                    setTimeout(() => {
+                        notif.classList.remove('show');
+                    }, 4000);
+                }
+            })
+            .catch(err => {
+                notif.innerText = '生成报告请求失败: ' + err.message;
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                }, 4000);
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v8M8 12h8"/>
+                    </svg>运行诊断并生成报告结论`;
+                }
+            });
+        }
+
+        // Extractor File Upload and Drag & Drop handlers
+        let extractorSelectedFile = null;
+
+        function initExtractorDragAndDrop() {
+            const zone = document.getElementById('extractor_drop_zone');
+            if (!zone) return;
+            
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+            
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    extractorSelectedFile = e.dataTransfer.files[0];
+                    showExtractorSelectedFile();
+                }
+            });
+            
+            zone.addEventListener('click', () => {
+                document.getElementById('extractor_file_input').click();
+            });
+        }
+
+        function handleExtractorFileSelect() {
+            const input = document.getElementById('extractor_file_input');
+            if (input.files && input.files.length > 0) {
+                extractorSelectedFile = input.files[0];
+                showExtractorSelectedFile();
+            }
+        }
+
+        function showExtractorSelectedFile() {
+            const textEl = document.getElementById('extractor_upload_text');
+            if (extractorSelectedFile) {
+                textEl.innerHTML = `已选择文件: <span style="color: var(--accent-green); font-weight:600;">${extractorSelectedFile.name}</span> (${(extractorSelectedFile.size / 1024).toFixed(1)} KB)`;
+            } else {
+                textEl.innerHTML = `拖拽图片/文档至此，或 <span style="color: var(--accent-cyan);">点击上传</span>`;
+            }
+        }
+
+        // Initialize drag & drop when DOM loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            initExtractorDragAndDrop();
+        });
+
+        // Extracted rules states
+        let tempExtractedMetrics = {};
+        let tempExtractedCapacity = {};
+
+        function runRuleExtraction() {
+            const notif = document.getElementById('notif');
+            const btn = document.getElementById('btn_run_extractor');
+            const textInput = document.getElementById('extractor_text_input').value.trim();
+
+            if (!extractorSelectedFile && !textInput) {
+                notif.innerText = '请先上传文件或粘贴/输入规则说明文字。';
+                notif.style.background = 'rgba(245, 158, 11, 0.9)';
+                notif.classList.add('show');
+                setTimeout(() => notif.classList.remove('show'), 3000);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="extractor-spinner"></span> 正在解析提取中...`;
+
+            const formData = new FormData();
+            if (extractorSelectedFile) {
+                formData.append('file', extractorSelectedFile);
+            }
+            if (textInput) {
+                formData.append('text', textInput);
+            }
+
+            fetch('/api/extract_rules', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    tempExtractedMetrics = data.rules.metrics || {};
+                    tempExtractedCapacity = data.rules.vehicle_capacity || {};
+
+                    renderExtractedRules();
+                    document.getElementById('extracted_results_panel').removeAttribute('style');
+
+                    if (data.using_mock) {
+                        if (data.api_configured) {
+                            notif.innerText = 'AI 解析服务请求失败 (' + (data.error_detail || '未知错误') + ')，已自动降级为本地特征匹配模式。';
+                        } else {
+                            notif.innerText = '未配置 AI API Key，已使用本地内置特征匹配模式提取规则。';
+                        }
+                        notif.style.background = 'rgba(245, 158, 11, 0.9)';
+                    } else {
+                        notif.innerText = 'AI 规则提取解析成功！';
+                        notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                    }
+                } else {
+                    notif.innerText = '解析失败: ' + (data.error || '大模型响应格式不匹配');
+                    notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                }
+                setTimeout(() => notif.classList.remove('show'), 4000);
+            })
+            .catch(err => {
+                notif.innerText = '提取请求失败: ' + err.message;
+                notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                setTimeout(() => notif.classList.remove('show'), 4000);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v8M8 12h8"/>
+                    </svg>
+                    AI 智能解析并提取规则
+                `;
+            });
+            
+            notif.innerText = '正在调用 AI 引擎解析并提取结构化物流考核规则...';
+            notif.style.background = 'rgba(59, 130, 246, 0.9)';
+            notif.classList.add('show');
+        }
+
+        function renderExtractedRules() {
+            const metricsContainer = document.getElementById('extracted_metrics_list');
+            metricsContainer.innerHTML = '';
+            
+            Object.entries(tempExtractedMetrics).forEach(([name, meta]) => {
+                const row = document.createElement('div');
+                row.className = 'rule-card-item extracted-item';
+                row.innerHTML = `
+                    <div class="rule-card-fields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>指标名称</label>
+                                <input type="text" class="ext-metric-name" value="${name}">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label>管控级别</label>
+                                    <select class="ext-metric-level">
+                                        <option value="考核" ${meta.control_level === '考核' ? 'selected' : ''}>考核</option>
+                                        <option value="通晒" ${meta.control_level === '通晒' ? 'selected' : ''}>通晒</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 2;">
+                                    <label>数据源配置</label>
+                                    <input type="text" class="ext-metric-source" value="${meta.data_source || ''}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>考核红线值 (如 0.95，无红线则留空)</label>
+                                <input type="number" step="0.01" class="ext-metric-redline" value="${meta.red_line !== undefined && meta.red_line !== null ? meta.red_line : ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>规则描述说明</label>
+                                <textarea class="ext-metric-desc" rows="1">${meta.description || ''}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rule-card-actions" style="display:flex; justify-content:center;">
+                        <button class="btn btn-secondary delete-btn" style="width:100%;" onclick="deleteExtractedRow(this)">删除指标</button>
+                    </div>
+                `;
+                metricsContainer.appendChild(row);
+            });
+
+            const capacityContainer = document.getElementById('extracted_capacity_list');
+            capacityContainer.innerHTML = '';
+
+            Object.entries(tempExtractedCapacity).forEach(([vType, cap]) => {
+                const row = document.createElement('div');
+                row.className = 'extracted-capacity-item';
+                row.innerHTML = `
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>车型名称</label>
+                        <input type="text" class="ext-capacity-name" value="${vType}">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>财务装载容量 (V)</label>
+                        <input type="number" class="ext-capacity-val" value="${cap}">
+                    </div>
+                    <div style="display:flex; justify-content:center;">
+                        <button class="btn btn-secondary delete-btn" style="width:100%; margin-bottom:0;" onclick="deleteExtractedRow(this)">删除</button>
+                    </div>
+                `;
+                capacityContainer.appendChild(row);
+            });
+        }
+
+        function addNewExtractedMetricRow() {
+            const metricsContainer = document.getElementById('extracted_metrics_list');
+            const row = document.createElement('div');
+            row.className = 'rule-card-item extracted-item';
+            row.innerHTML = `
+                <div class="rule-card-fields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>指标名称</label>
+                            <input type="text" class="ext-metric-name" value="" placeholder="输入指标名称">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label>管控级别</label>
+                                <select class="ext-metric-level">
+                                    <option value="考核" selected>考核</option>
+                                    <option value="通晒">通晒</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 2;">
+                                <label>数据源配置</label>
+                                <input type="text" class="ext-metric-source" value="" placeholder="输入数据源">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>考核红线值 (如 0.95)</label>
+                            <input type="number" step="0.01" class="ext-metric-redline" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>规则描述说明</label>
+                            <textarea class="ext-metric-desc" rows="1" placeholder="业务判断说明"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="rule-card-actions" style="display:flex; justify-content:center;">
+                    <button class="btn btn-secondary delete-btn" style="width:100%;" onclick="deleteExtractedRow(this)">删除指标</button>
+                </div>
+            `;
+            metricsContainer.appendChild(row);
+        }
+
+        function addNewExtractedCapacityRow() {
+            const capacityContainer = document.getElementById('extracted_capacity_list');
+            const row = document.createElement('div');
+            row.className = 'extracted-capacity-item';
+            row.innerHTML = `
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>车型名称</label>
+                    <input type="text" class="ext-capacity-name" value="" placeholder="输入车型">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>财务装载容量 (V)</label>
+                    <input type="number" class="ext-capacity-val" value="" placeholder="输入体积容量">
+                </div>
+                <div style="display:flex; justify-content:center;">
+                    <button class="btn btn-secondary delete-btn" style="width:100%; margin-bottom:0;" onclick="deleteExtractedRow(this)">删除</button>
+                </div>
+            `;
+            capacityContainer.appendChild(row);
+        }
+
+        function deleteExtractedRow(btnEl) {
+            const cardItem = btnEl.closest('.rule-card-item') || btnEl.closest('.extracted-capacity-item');
+            if (cardItem) cardItem.remove();
+        }
+
+        function saveExtractedRulesToLibrary() {
+            // Read extracted metrics inputs
+            const metricRows = document.querySelectorAll('#extracted_metrics_list .rule-card-item');
+            const newMetrics = {};
+            metricRows.forEach(row => {
+                const name = row.querySelector('.ext-metric-name').value.trim();
+                if (!name) return;
+                
+                const level = row.querySelector('.ext-metric-level').value;
+                const source = row.querySelector('.ext-metric-source').value.trim();
+                const redlineInput = row.querySelector('.ext-metric-redline').value.trim();
+                const redline = redlineInput !== '' ? parseFloat(redlineInput) : null;
+                const desc = row.querySelector('.ext-metric-desc').value.trim();
+                
+                newMetrics[name] = {
+                    control_level: level,
+                    data_source: source,
+                    description: desc,
+                    red_line: redline
+                };
+            });
+
+            // Read extracted capacity inputs
+            const capacityRows = document.querySelectorAll('#extracted_capacity_list .extracted-capacity-item');
+            const newCapacity = {};
+            capacityRows.forEach(row => {
+                const name = row.querySelector('.ext-capacity-name').value.trim();
+                const capInput = row.querySelector('.ext-capacity-val').value.trim();
+                if (!name || capInput === '') return;
+                
+                newCapacity[name] = parseInt(capInput, 10);
+            });
+
+            // Merge into currentRulesConfig
+            if (!currentRulesConfig.metrics) currentRulesConfig.metrics = {};
+            if (!currentRulesConfig.vehicle_capacity) currentRulesConfig.vehicle_capacity = {};
+
+            Object.assign(currentRulesConfig.metrics, newMetrics);
+            Object.assign(currentRulesConfig.vehicle_capacity, newCapacity);
+
+            // Re-render rules manager UI
+            renderRulesManager();
+
+            // Save to server directly
+            saveAllRulesToServer();
+
+            // Switch to rules manager tab to let user see updated list
+            switchTab('rules_manager');
+
+            // Hide extractor results panel
+            document.getElementById('extracted_results_panel').setAttribute('style', 'display: none;');
+            document.getElementById('extractor_text_input').value = '';
+            extractorSelectedFile = null;
+            showExtractorSelectedFile();
+        }
+
+        function resetConfig() {
+            document.getElementById('channel_select').value = 'webhook';
+            toggleChannelInputs();
+            document.getElementById('webhook_url').value = 'https://open.feishu.cn/open-apis/bot/v2/hook/YOUR-UUID';
+            document.getElementById('secret_key').value = '';
+            document.getElementById('app_id').value = '';
+            document.getElementById('app_secret').value = '';
+            document.getElementById('chat_id').value = '';
+            
+            document.getElementById('kpi_departure').value = 95;
+            document.getElementById('kpi_unload').value = 95;
+            document.getElementById('kpi_load').value = 50;
+            document.getElementById('kpi_tms').value = 92;
+            updateKpiValue('kpi_departure');
+            updateKpiValue('kpi_unload');
+            updateKpiValue('kpi_load');
+            updateKpiValue('kpi_tms');
+
+            document.getElementById('llm_api_key').value = '';
+            document.getElementById('llm_api_base').value = '';
+            document.getElementById('llm_model').value = 'gpt-4o';
+            
+            const notif = document.getElementById('notif');
+            notif.innerText = '已重置 UI 字段值，请点击保存更新至文件';
+            notif.style.background = 'rgba(245, 158, 11, 0.9)';
+            notif.classList.add('show');
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

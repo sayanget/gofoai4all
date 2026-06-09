@@ -1,0 +1,77 @@
+{
+  "analysis_result": {
+    "status": "danger",
+    "title": "物流调度部运营分析与 AI 定责考核报告",
+    "date": "2026-06-08",
+    "summary": "今日物流网络整体运行状态为 DANGER。其中核心考核指标【发车准点率, 班次发货及时率, 卸车及时率】未达到公司设定的考核红线，需重点跟进督办。",
+    "metrics_display": [
+      {
+        "name": "发车准点率",
+        "value": "50.0%",
+        "status": "异常",
+        "rule_triggered": "触发考核指标未达标拦截规则"
+      },
+      {
+        "name": "线路装载率",
+        "value": "54.7%",
+        "status": "正常",
+        "rule_triggered": "符合正常运作要求"
+      },
+      {
+        "name": "运行合格率",
+        "value": "33.3%",
+        "status": "正常",
+        "rule_triggered": "符合正常运作要求"
+      },
+      {
+        "name": "到达准点率",
+        "value": "50.0%",
+        "status": "正常",
+        "rule_triggered": "符合正常运作要求"
+      },
+      {
+        "name": "加班占比",
+        "value": "50.0%",
+        "status": "正常",
+        "rule_triggered": "符合正常运作要求"
+      },
+      {
+        "name": "班次发货及时率",
+        "value": "92.7%",
+        "status": "异常",
+        "rule_triggered": "触发考核指标未达标拦截规则"
+      },
+      {
+        "name": "TMS操作率",
+        "value": "100.0%",
+        "status": "正常",
+        "rule_triggered": "符合正常运作要求"
+      },
+      {
+        "name": "卸车及时率",
+        "value": "33.3%",
+        "status": "异常",
+        "rule_triggered": "触发考核指标未达标拦截规则"
+      }
+    ],
+    "diagnosis_details": [
+      {
+        "type": "核心异常",
+        "content": "指标【发车准点率】(ID: T002) 发生异常，系统定责原因：晚发车打卡。 (详情: 计划: 2026-06-08 11:00:00, 实际: 2026-06-08 11:20:00)"
+      },
+      {
+        "type": "核心异常",
+        "content": "指标【发车准点率】(ID: T003) 发生异常，系统定责原因：本站无发车打卡但下一站已到站。 (详情: 计划: 2026-06-08 12:00:00, 实际: NaT)"
+      },
+      {
+        "type": "核心异常",
+        "content": "指标【线路装载率】(ID: L002) 发生异常，系统定责原因：车型 26' Boxtruck 综合装载率 37.5% 低于 50% 红线 (详情: 分段明细: [{'leg_index': 1, 'loaded_qty': 1500, 'unloaded_qty': 0, 'miles': 100.0}])"
+      }
+    ],
+    "action_suggestions": [
+      "协调【发车准点率】涉及责任节点，在24小时内完成排查并提交纠偏报告。",
+      "加强对异常趟车TMS节点扫描的规范培训，避免漏扫误判。"
+    ]
+  },
+  "feishu_status_code": 200
+}

@@ -1,0 +1,10 @@
+{
+  "feishu_webhook": "http://localhost:8081/open-apis/bot/v2/hook/f3a8d94e-289c-4f11-9ab7-bb703b41e3d0",
+  "feishu_secret": "kL7yP29sN1zB6mA4",
+  "app_id": "cli_a9fc1c1c0bb8dbcb",
+  "app_secret": "XeStEZgDlQQUnUU93w1d3emYSdMSfiq6",
+  "chat_id": "oc_9deed7667aec86791fc93583b28ae2c6",
+  "llm_api_key": "sk-gemini",
+  "llm_api_base": "http://localhost:8082/v1",
+  "llm_model": "gemini-2.5-pro"
+}

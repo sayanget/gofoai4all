@@ -1,0 +1,57 @@
+{
+  "metrics": {
+    "TMS操作率": {
+      "control_level": "考核",
+      "data_source": "TMS-出发到达管理",
+      "description": "总实际操作次数 / (发车+装车+到达+卸车)应操作车次数。支持免操作和剔除判断。",
+      "red_line": 0.92
+    },
+    "到达准点率": {
+      "control_level": "通晒",
+      "data_source": "TMS-出发到达管理",
+      "description": "到达准点率 = 当日准点到达车次数 / 当日应到达车次数。实际到车时间 <= 计划到车时间为准点。"
+    },
+    "加班占比": {
+      "control_level": "通晒",
+      "data_source": "TMS-出发到达管理",
+      "description": "加班占比 = 当日加班车次数 / 当日应发总车次数 (正班 + 加班) * 100%。仅统计始发站点任务。"
+    },
+    "卸车及时率": {
+      "control_level": "考核",
+      "data_source": "TMS-出发到达管理",
+      "description": "准点卸车车次数 / (准点 + 晚点 + 漏卸车 + 本站发车未扫袋牌车次)。",
+      "red_line": 0.95
+    },
+    "发车准点率": {
+      "control_level": "考核",
+      "data_source": "TMS-出发到达管理",
+      "description": "准点率 = 当日应发车次的准点发车车次 / 当日应发总车次。超出计划发车时间未打卡或本站无发车但下一站已到车记为晚点。",
+      "red_line": 0.95
+    },
+    "班次发货及时率": {
+      "control_level": "考核",
+      "data_source": "班次监控",
+      "description": "又称HUB发货及时率。区分集货与散货班次，件中转与箱中转判定截单时间，支持有无车到达时间的自适应窗口。",
+      "red_line": 0.96
+    },
+    "线路装载率": {
+      "control_level": "通晒",
+      "data_source": "TMS-出发到达管理",
+      "description": "综合装载率 = SUM(路段装载率_i * 路段英里数_i) / 线路总英里数。车型财务分母：53' Trailer=12000, 26' Boxtruck=4000, 22' Box Truck=3385, 16' Box Truck=1615, 15' Box Truck=1615, Cargo Van=1480。",
+      "red_line": 0.5
+    },
+    "运行合格率": {
+      "control_level": "通晒",
+      "data_source": "TMS-出发到达管理",
+      "description": "运行合格车次 / 总发车车次。实际运行时长 <= 计划运行时长为合格。"
+    }
+  },
+  "vehicle_capacity": {
+    "15' Box Truck": 1615,
+    "16' Box Truck": 1615,
+    "22' Box Truck": 3385,
+    "26' Boxtruck": 38,
+    "53' Trailer": 110,
+    "Cargo Van": 1480
+  }
+}
