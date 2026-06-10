@@ -1700,7 +1700,11 @@
             const cat = document.getElementById('report_target_category').value;
             lastSelectedCategory = cat;
             
-            const defaultPrompt = '你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息，输出专业的定责考核报告。';
+            const defaultPrompts = {
+                "HUB": "你是一个精通“HUB集包与库内操作”的资深跨境物流专家。请根据提供的时效数据和异常明细，重点关注HUB操作耗时、错分漏分情况，输出专业的定责考核报告。",
+                "调度": "你是一个精通“跨境干线与卡车调度”的资深物流专家。请根据提供的时效数据和异常明细，重点关注承运商发车准点率、卸车及时率及截单时间，输出专业的定责考核报告。"
+            };
+            const defaultPrompt = defaultPrompts[cat] || `你是一个精通“跨境电商物流”的资深分析专家。请针对【${cat}】环节，根据提供的时效数据和异常信息，输出专业的定责考核报告。`;
             promptBox.value = window.llmPromptsCache[cat] || defaultPrompt;
         }
 

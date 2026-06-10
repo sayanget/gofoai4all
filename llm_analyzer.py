@@ -74,14 +74,29 @@ class LLMAnalyzer:
         """
         # 构建 prompt
         prompt = self._build_prompt(metrics, exceptions)
-        system_prompt = self.custom_prompt if getattr(self, 'custom_prompt', None) else (
-            "你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息（如清关提货、干线Linehaul、尾程承运商注入、Hub集包），输出专业的定责考核报告，重点关注承运商截单时间和交件准点率。语言客观中立。\n"
-            "你的核心任务是：\n"
-            "1. 找出未达标指标（发车准点率、班次发货及时率、TMS操作率、卸车及时率红线为 92%-95%，请根据具体策略判断）。\n"
-            "2. 根据串点加时、漏扫描定责等底层规则，准确指出异常原因，避免误判。\n"
-            "3. 给出的优化建议必须具体、可执行，拒绝务虚。\n"
-            "4. 必须输出符合 Schema 要求的标准 JSON 字符串，不能含有 Markdown 格式的包裹（如 ```json），直接返回 JSON 本身。"
-        )
+        
+        # 动态获取 System Prompt
+        if getattr(self, 'custom_prompt', None):
+            system_prompt = self.custom_prompt
+        else:
+            cat = getattr(self, 'target_category', '默认')
+            if cat == "HUB":
+                system_prompt = "你是一个精通“HUB集包与库内操作”的资深跨境物流专家。请根据提供的时效数据和异常明细，重点关注HUB操作耗时、错分漏分情况，输出专业的定责考核报告。"
+            elif cat == "调度":
+                system_prompt = (
+                    "你是一个精通“跨境干线与卡车调度”的资深物流专家。请根据提供的时效数据和异常明细，重点关注承运商发车准点率、卸车及时率及截单时间，输出专业的定责考核报告。\n"
+                    "你的核心任务是：\n"
+                    "1. 找出未达标指标（发车准点率、班次发货及时率、TMS操作率、卸车及时率红线为 92%-95%，请根据具体策略判断）。\n"
+                )
+            else:
+                system_prompt = f"你是一个精通“跨境电商物流”的资深分析专家。请针对【{cat}】环节，根据提供的时效数据和异常信息，输出专业的定责考核报告。"
+            
+            # 追加统一的格式要求
+            system_prompt += (
+                "\n2. 根据串点加时、漏扫描定责等底层规则，准确指出异常原因，避免误判。\n"
+                "3. 给出的优化建议必须具体、可执行，拒绝务虚。\n"
+                "4. 必须输出符合 Schema 要求的标准 JSON 字符串，不能含有 Markdown 格式的包裹（如 ```json），直接返回 JSON 本身。"
+            )
 
         try:
             if "gemini" in self.model.lower():
