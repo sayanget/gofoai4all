@@ -69,10 +69,54 @@ def save_config():
         feishu_config["chat_id"] = data.get("chat_id", "")
 
     # 保存自定义大模型配置
-    feishu_config["llm_api_key"] = data.get("llm_api_key", "")
-    feishu_config["llm_api_base"] = data.get("llm_api_base", "")
-    feishu_config["llm_model"] = data.get("llm_model", "")
-    feishu_config["llm_custom_prompt"] = data.get("llm_custom_prompt", "")
+    llm_api_key = data.get("llm_api_key", "")
+    llm_api_base = data.get("llm_api_base", "")
+    llm_model = data.get("llm_model", "")
+    
+    # --- AI 配置自动验证逻辑 ---
+    if llm_api_key or llm_api_base or llm_model:
+        if "gemini" in llm_model.lower():
+            try:
+                import google.generativeai as genai
+                # 兼容 Gemini 代理的客户端配置
+                client_options = {'api_endpoint': llm_api_base} if llm_api_base else None
+                genai.configure(
+                    api_key=llm_api_key or "dummy_key",
+                    transport='rest',
+                    client_options=client_options
+                )
+                model = genai.GenerativeModel(llm_model)
+                # 简单的测试内容验证连通性
+                model.generate_content("Hello")
+            except Exception as e:
+                logger.error(f"Gemini Validation Error: {e}")
+                return jsonify({"success": False, "error": f"AI 智能诊断引擎配置验证失败 (Gemini SDK)：无法连接或授权失败。报错信息：{type(e).__name__} - {e}"}), 400
+        else:
+            import requests
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            test_base = llm_api_base.rstrip("/") if llm_api_base else "https://api.openai.com/v1"
+            test_url = f"{test_base}/models"
+            headers = {}
+            if llm_api_key:
+                headers["Authorization"] = f"Bearer {llm_api_key}"
+                
+            try:
+                resp = requests.get(test_url, headers=headers, timeout=5, verify=False)
+                if resp.status_code == 401:
+                    return jsonify({"success": False, "error": "AI 智能诊断引擎配置验证失败：API Key 无效或未授权，请检查后重试！"}), 400
+                elif resp.status_code != 200:
+                    return jsonify({"success": False, "error": f"AI 智能诊断引擎配置验证失败：服务器返回异常状态码 {resp.status_code}，请检查 API Base URL！"}), 400
+            except requests.exceptions.RequestException as e:
+                logger.error(f"LLM Validation Error: {e}")
+                return jsonify({"success": False, "error": f"AI 智能诊断引擎配置验证失败：无法连接到大模型接口（{test_url}）。可能是端口未开启或地址错误。报错信息：{type(e).__name__}。请修改配置后重试！"}), 400
+    # ---------------------------
+
+    feishu_config["llm_api_key"] = llm_api_key
+    feishu_config["llm_api_base"] = llm_api_base
+    feishu_config["llm_model"] = llm_model
+    feishu_config["llm_custom_prompts"] = data.get("llm_custom_prompts", {})
 
     try:
         os.makedirs(os.path.dirname(FEISHU_CONFIG_FILE), exist_ok=True)
@@ -92,16 +136,22 @@ def save_config():
         except Exception:
             pass
 
-    if "metrics" not in rules_config:
-        rules_config["metrics"] = {}
+    if "categories" not in rules_config:
+        rules_config["categories"] = {}
 
     dynamic_kpis = data.get("dynamic_kpis", {})
     for metric_name, val in dynamic_kpis.items():
-        if metric_name in rules_config["metrics"]:
-            rules_config["metrics"][metric_name]["red_line"] = val
-        else:
-            # 如果规则里完全没有这个指标（一般不常见，但在扩展时可能需要）
-            rules_config["metrics"][metric_name] = {
+        found = False
+        for cat_data in rules_config["categories"].values():
+            if "metrics" in cat_data and metric_name in cat_data["metrics"]:
+                cat_data["metrics"][metric_name]["red_line"] = val
+                found = True
+                break
+        if not found:
+            # Fallback for dynamic KPI if not found in any category (create a default category)
+            if "默认分类" not in rules_config["categories"]:
+                rules_config["categories"]["默认分类"] = {"data_source": "", "metrics": {}}
+            rules_config["categories"]["默认分类"]["metrics"][metric_name] = {
                 "control_level": "考核",
                 "red_line": val
             }
@@ -182,8 +232,8 @@ def send_test_card():
 def save_all_rules():
     try:
         data = request.get_json(force=True, silent=True) or {}
-        if "metrics" not in data or "vehicle_capacity" not in data:
-            return jsonify({"success": False, "error": "Invalid rules format. Must contain metrics and vehicle_capacity."}), 400
+        if "categories" not in data or "vehicle_capacity" not in data:
+            return jsonify({"success": False, "error": "Invalid rules format. Must contain categories and vehicle_capacity."}), 400
         
         os.makedirs(os.path.dirname(RULES_FILE), exist_ok=True)
         with open(RULES_FILE, "w", encoding="utf-8") as f:
@@ -597,9 +647,21 @@ def extract_rules():
 @app.route("/api/generate_report", methods=["POST"])
 def generate_report():
     try:
+        file_path = None
+        if request.content_type and request.content_type.startswith('multipart/form-data'):
+            target_category = request.form.get("target_category", "")
+            file = request.files.get("file")
+            if file and file.filename:
+                os.makedirs("uploads", exist_ok=True)
+                file_path = os.path.join("uploads", file.filename)
+                file.save(file_path)
+        else:
+            data = request.get_json(force=True, silent=True) or {}
+            target_category = data.get("target_category", "")
+            
         from run_pipeline import run_pipeline
-        logger.info("Executing real daily pipeline for manual review...")
-        pipeline_results = run_pipeline()
+        logger.info(f"Executing real daily pipeline for manual review... target_category: {target_category}, file_path: {file_path}")
+        pipeline_results = run_pipeline(target_category, file_path)
         agent_output = pipeline_results["ai_report"]
         logger.info("Daily pipeline completed successfully.")
         return jsonify({"success": True, "report": agent_output})

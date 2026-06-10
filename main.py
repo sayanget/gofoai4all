@@ -19,8 +19,16 @@ def run_daily_pipeline():
     # 1. 初始化 Agent
     dispatcher_agent = create_dispatcher_agent()
     
+    try:
+        with open("config/rules.json", "r", encoding="utf-8") as f:
+            rules_config = json.load(f)
+            # 默认取发车准点率的数据源作为全局入口
+            feishu_url = rules_config.get("metrics", {}).get("发车准点率", {}).get("data_source", "data/depatcher.xlsx")
+    except Exception:
+        feishu_url = "data/depatcher.xlsx"
+
     # 2. 触发 Agent 任务（让它自己去调工具计算指标并诊断）
-    user_input = "请分析 2026-06-08 的 TMS 原始数据，路径为 depatcher.xlsx"
+    user_input = f"请读取今日的调度日志数据源 {feishu_url}，进行KPI规则审查，给出各环节异常汇总，最后生成飞书推送卡片结构。"
     logger.info("Triggering Agent running tasks...")
     response = dispatcher_agent.run(user_input)
     

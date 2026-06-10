@@ -2,6 +2,7 @@
 物流调度部 AI 考核报告与飞书融合分发系统 - 全套处理流水线与单元测试
 """
 
+import os
 import json
 from datetime import datetime
 from rules_checker import RulesChecker
@@ -208,17 +209,36 @@ def get_mock_daily_data() -> dict:
 # ==============================================================================
 # 2. 流水线执行
 # ==============================================================================
-def run_pipeline() -> dict:
+def run_pipeline(target_category: str = "", file_path: str = None) -> dict:
     """
     运行完整的处理流水线：校验 -> 诊断分析 -> 组装卡片
     """
-    # Step 1: 获取 Mock 数据并运行拦截校验层
-    raw_data = get_mock_daily_data()
+    # Step 1: 获取真实飞书数据或降级为 Mock 数据并运行拦截校验层
+    raw_data = None
+    if file_path and os.path.exists(file_path):
+        from tools.tms_extractor import TMSExtractor
+        extractor = TMSExtractor(file_path)
+        raw_data = extractor.extract()
+    else:
+        try:
+            with open("config/rules.json", "r", encoding="utf-8") as f:
+                rules_config = json.load(f)
+                feishu_url = rules_config.get("categories", {}).get(target_category, {}).get("data_source", "")
+        except Exception:
+            feishu_url = ""
+
+        if feishu_url and feishu_url.startswith("http") and "feishu.cn" in feishu_url:
+            from tools.tms_extractor import TMSExtractor
+            extractor = TMSExtractor(feishu_url)
+            raw_data = extractor.extract()
+        else:
+            raw_data = get_mock_daily_data()
+            
     checker = RulesChecker(raw_data)
     check_results = checker.check_all_metrics()
     
     # Step 2: 提取结果送入 AI 诊断引擎
-    analyzer = LLMAnalyzer()
+    analyzer = LLMAnalyzer(target_category=target_category)
     ai_report = analyzer.analyze(check_results["metrics"], check_results["exceptions"])
     
     # Step 3: 使用飞书分发层渲染 interactive payload

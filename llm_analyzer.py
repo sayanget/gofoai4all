@@ -17,7 +17,7 @@ class LLMAnalyzer:
     大模型 API 调用层：传入静态规则与动态快照，返回结构化诊断报告。
     """
 
-    def __init__(self):
+    def __init__(self, target_category: str = ""):
         # 优先读取配置文件中的自定义大模型配置，其次读取环境变量，最后使用默认值
         config_api_key = None
         config_api_base = None
@@ -32,7 +32,8 @@ class LLMAnalyzer:
                     config_api_key = config_data.get("llm_api_key")
                     config_api_base = config_data.get("llm_api_base")
                     config_model = config_data.get("llm_model")
-                    config_custom_prompt = config_data.get("llm_custom_prompt")
+                    config_custom_prompts = config_data.get("llm_custom_prompts", {})
+                    config_custom_prompt = config_custom_prompts.get(target_category, "") if target_category else ""
             except Exception as e:
                 logger.error(f"Error loading LLM config from {config_path}: {e}")
 
@@ -74,7 +75,7 @@ class LLMAnalyzer:
         # 构建 prompt
         prompt = self._build_prompt(metrics, exceptions)
         system_prompt = self.custom_prompt if getattr(self, 'custom_prompt', None) else (
-            "你是一位精通物流调度与中转站运营的资深专家。请严格依据公司的《静态规则库》对输入的当日 TMS 运行数据进行比对和异常定责。\n"
+            "你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息（如清关提货、干线Linehaul、尾程承运商注入、Hub集包），输出专业的定责考核报告，重点关注承运商截单时间和交件准点率。语言客观中立。\n"
             "你的核心任务是：\n"
             "1. 找出未达标指标（发车准点率、班次发货及时率、TMS操作率、卸车及时率红线为 92%-95%，请根据具体策略判断）。\n"
             "2. 根据串点加时、漏扫描定责等底层规则，准确指出异常原因，避免误判。\n"
@@ -82,39 +83,84 @@ class LLMAnalyzer:
             "4. 必须输出符合 Schema 要求的标准 JSON 字符串，不能含有 Markdown 格式的包裹（如 ```json），直接返回 JSON 本身。"
         )
 
-        # 检查是否具备 API 密钥，不具备则触发 Mock 降级机制以保证流程稳定
-        if not self.api_key:
-            logger.warning("未检测到 API 密钥 (LLM_API_KEY/OPENAI_API_KEY)，已启用本地启发式 Mock LLM 引擎")
-            return self._heuristic_mock_analysis(metrics, exceptions)
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
-
-        # 构造请求体，开启 json_object 响应格式（如果模型支持）
-        payload = {
-            "model": self.model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2
-        }
-        
-        # 如果是 gpt-4o 等模型，启用 response_format json_object
-        if "gpt" in self.model.lower():
-            payload["response_format"] = {"type": "json_object"}
-
         try:
-            url = f"{self.api_base.rstrip('/')}/chat/completions"
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
-            response.raise_for_status()
-            res_json = response.json()
-            raw_content = res_json["choices"][0]["message"]["content"]
-            
-            return self._parse_and_validate_json(raw_content, metrics, exceptions)
-            
+            if "gemini" in self.model.lower():
+                import google.generativeai as genai
+                client_options = {'api_endpoint': self.api_base} if self.api_base else None
+                genai.configure(
+                    api_key=self.api_key or "dummy_key",
+                    transport='rest',
+                    client_options=client_options
+                )
+                model = genai.GenerativeModel(
+                    self.model,
+                    system_instruction=system_prompt,
+                    generation_config=genai.GenerationConfig(
+                        temperature=0.2
+                    )
+                )
+                response = model.generate_content(prompt)
+                
+                try:
+                    raw_content = response.text
+                except ValueError as e:
+                    if "function_call" in str(e) and response.candidates:
+                        part = response.candidates[0].content.parts[0]
+                        if part.function_call:
+                            import json
+                            args_dict = type(part.function_call.args).to_dict(part.function_call.args) if hasattr(type(part.function_call.args), 'to_dict') else dict(part.function_call.args)
+                            raw_content = json.dumps(args_dict)
+                        else:
+                            raise
+                    else:
+                        raise
+                        
+                if not raw_content.strip():
+                    if response.candidates:
+                        part = response.candidates[0].content.parts[0]
+                        if part.function_call:
+                            import json
+                            args_dict = type(part.function_call.args).to_dict(part.function_call.args) if hasattr(type(part.function_call.args), 'to_dict') else dict(part.function_call.args)
+                            raw_content = json.dumps(args_dict)
+                        else:
+                            raise ValueError(f"大模型返回空文本，中断原因: {response.candidates[0].finish_reason}")
+                    else:
+                        raise ValueError("大模型未返回任何有效 Candidate")
+                        
+                return self._parse_and_validate_json(raw_content, metrics, exceptions)
+                
+            else:
+                if not self.api_key:
+                    logger.warning("未检测到 API 密钥，且非本地代理 Gemini 模型，尝试使用无鉴权方式调用")
+                
+                headers = {
+                    "Content-Type": "application/json"
+                }
+                if self.api_key:
+                    headers["Authorization"] = f"Bearer {self.api_key}"
+        
+                # 构造请求体，开启 json_object 响应格式（如果模型支持）
+                payload = {
+                    "model": self.model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.2
+                }
+                
+                # 如果是 gpt-4o 等模型，启用 response_format json_object
+                if "gpt" in self.model.lower():
+                    payload["response_format"] = {"type": "json_object"}
+        
+                url = f"{self.api_base.rstrip('/')}/chat/completions"
+                response = requests.post(url, headers=headers, json=payload, timeout=30)
+                response.raise_for_status()
+                res_json = response.json()
+                raw_content = res_json["choices"][0]["message"]["content"]
+                
+                return self._parse_and_validate_json(raw_content, metrics, exceptions)
+                
         except Exception as e:
             logger.error(f"大模型 API 调用失败: {e}，触发本地 Mock 降级")
             return self._heuristic_mock_analysis(metrics, exceptions)
@@ -123,20 +169,37 @@ class LLMAnalyzer:
         """
         构建包含静态规则和动态运行快照的 Prompt
         """
+        import rules_config
+        
+        # 提取动态规则内容
+        rules_text = "【当前生效的大盘考核规则与红线】\n"
+        for k, v in rules_config.METRICS_CONFIG.items():
+            red_line_str = f"{v.get('red_line', 0)*100}%" if v.get("red_line") else "N/A"
+            rules_text += f"- {k} ({v.get('control_level')}): 考核红线 {red_line_str}。规则说明: {v.get('description', '无')}\n"
+        rules_text += "\n【当前生效的车型财务容量配置】\n"
+        for k, v in rules_config.VEHICLE_CAPACITY.items():
+            rules_text += f"- {k}: 额定 {v} 件\n"
+
         formatted_metrics = []
         for name, val in metrics.items():
             rate_str = f"{val['rate']*100:.1f}%" if "rate" in val else "N/A"
             formatted_metrics.append(f"- {name}: 实际完成 {rate_str} (状态: {val['status']})")
 
         formatted_exceptions = []
-        for i, ex in enumerate(exceptions, 1):
+        max_exceptions_to_prompt = 5
+        for i, ex in enumerate(exceptions[:max_exceptions_to_prompt], 1):
             formatted_exceptions.append(
                 f"{i}. 指标: {ex['metric_name']} | ID: {ex['id']} | 异常状态: {ex['status']}\n"
                 f"   - 原因: {ex['reason']}\n"
                 f"   - 数据细节: {ex['details']}"
             )
+            
+        if len(exceptions) > max_exceptions_to_prompt:
+            formatted_exceptions.append(f"\n... (由于篇幅限制，已省略其余 {len(exceptions) - max_exceptions_to_prompt} 条异常数据。请根据以上样本进行定责分析。)")
 
         prompt = f"""
+{rules_text}
+
 【今日物流调度运行数据快照】
 1. 指标达成率：
 {chr(10).join(formatted_metrics)}
@@ -144,7 +207,7 @@ class LLMAnalyzer:
 2. 系统判定异常/红线拦截项：
 {chr(10).join(formatted_exceptions) if formatted_exceptions else "今日无触发规则异常项，各项指标表现优异。"}
 
-请针对以上数据进行深入诊断，并按照以下 JSON Schema 输出分析结果：
+请针对以上规则与数据快照进行深入诊断，并按照以下 JSON Schema 输出分析结果：
 {{
   "status": "success" | "warning" | "danger",  // 整体评估：全达标为 success；仅有通晒指标异常/轻微考核指标未达标为 warning；有核心考核指标严重未达标为 danger
   "title": "报告标题",
@@ -231,20 +294,23 @@ class LLMAnalyzer:
         if exceptions:
             for ex in exceptions[:3]:  # 取前3个异常做精准诊断
                 diagnosis_details.append({
-                    "type": "核心异常",
+                    "type": "降级诊断",
                     "content": f"指标【{ex['metric_name']}】(ID: {ex['id']}) 发生异常，系统定责原因：{ex['reason']} (详情: {ex['details']})"
                 })
             
+            action_suggestions.append("⚠️ 请优先检查配置页面的 AI 模型接口与密钥是否正确填写并验证通过。")
             action_suggestions.append(f"协调【{exceptions[0]['metric_name']}】涉及责任节点，在24小时内完成排查并提交纠偏报告。")
             action_suggestions.append("加强对异常趟车TMS节点扫描的规范培训，避免漏扫误判。")
         else:
             diagnosis_details.append({
-                "type": "运营瓶颈",
+                "type": "降级诊断",
                 "content": "今日大盘各项关键时效与操作率表现符合公司考核预期，无突出运营瓶颈。"
             })
+            action_suggestions.append("⚠️ 请优先检查配置页面的 AI 模型接口与密钥是否正确填写并验证通过。")
             action_suggestions.append("继续保持现有精细化运作，建议对连续一周无异常的班次班组予以通报表扬。")
 
-        summary = f"今日物流网络整体运行状态为 {status.upper()}。"
+        summary = "⚠️ [大模型连接失败，已触发本地启发式降级分析]\n"
+        summary += f"今日物流网络整体运行状态为 {status.upper()}。"
         if failures:
             summary += f"其中核心考核指标【{', '.join(failures)}】未达到公司设定的考核红线，需重点跟进督办。"
         else:

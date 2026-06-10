@@ -25,7 +25,6 @@ class RulesChecker:
         self._check_route_load_rate()
         self._check_duration_qualification()
         self._check_arrival_punctuality()
-        self._check_overtime_percentage()
         self._check_shift_dispatch_timeliness()
         self._check_tms_operation_rate()
         self._check_unloading_timeliness()
@@ -203,31 +202,6 @@ class RulesChecker:
             "status": "正常"
         }
 
-    def _check_overtime_percentage(self):
-        """
-        校验加班占比 (指标 5)
-        """
-        records = self.raw_data.get("overtime_percentage", [])
-        if not records:
-            return
-            
-        total_trips = 0
-        overtime_trips = 0
-        
-        for r in records:
-            if not r.get("is_origin", False):
-                continue  # 仅统计本站始发的任务
-            total_trips += 1
-            if r.get("is_overtime", False):
-                overtime_trips += 1
-                
-        rate = overtime_trips / total_trips if total_trips > 0 else 0.0
-        self.metrics_results["加班占比"] = {
-            "rate": rate,
-            "total_trips": total_trips,
-            "overtime_trips": overtime_trips,
-            "status": "正常"
-        }
 
     def _check_shift_dispatch_timeliness(self):
         """

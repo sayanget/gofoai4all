@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>物流调度部 AI 报告与飞书分发系统配置中心</title>
+    <title>AI 报告控制中心</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -689,7 +689,7 @@
                 </svg>
             </div>
             <div class="logo-text">
-                <h1>物流调度 AI 报告控制中心</h1>
+                <h1>AI 报告控制中心</h1>
                 <p>Feishu Interactive Card Manager</p>
             </div>
         </div>
@@ -719,7 +719,7 @@
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
                         <path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>
                     </svg>
-                    通道与大盘设定
+                    AI 报告执行中心
                 </button>
                 <button class="tab-btn" id="btn_tab_rules_manager" onclick="switchTab('rules_manager')">
                     <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
@@ -735,9 +735,55 @@
                     </svg>
                     智能规则解析与转换
                 </button>
+                <button class="tab-btn" id="btn_tab_global_settings" onclick="switchTab('global_settings')">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                    </svg>
+                    系统环境配置
+                </button>
             </div>
 
             <div id="tab_system_config" class="tab-content active">
+                <div class="glass-panel" style="border: 1px solid rgba(6, 182, 212, 0.25); background: rgba(6, 182, 212, 0.03);">
+                    <div class="panel-header">
+                        <h2>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                            运行报告诊断并生成结论
+                        </h2>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
+                        运行物流网络诊断，通过 AI 专家大模型提取当前时效指标并生成定责考核报告。诊断生成后系统将自动跳转至独立编辑器与 Live 卡片预览中心进行二次编辑与分发。
+                    </p>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label>选择要执行诊断的指标大分类</label>
+                        <select id="report_target_category" title="选择分类" style="font-size:1.1em; padding:12px;">
+                            <option value="" disabled selected>-- 请选择分类 --</option>
+                        </select>
+                    </div>
+                    <div class="btn-group" style="display:flex; gap:12px;">
+                        <button class="btn btn-primary pulse" id="btn_generate_report" style="height: 48px; flex:2; background: linear-gradient(135deg, var(--accent-cyan), #0891b2);" onclick="generateAndOpenEditor()">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v8M8 12h8"/>
+                            </svg>
+                            运行诊断并生成报告结论
+                        </button>
+                        <input type="file" id="report_file_input" accept=".csv,.xlsx,.xls" style="display:none;" onchange="if(this.files.length) generateAndOpenEditor(this.files[0])">
+                        <button class="btn btn-secondary" style="height: 48px; flex:1;" onclick="document.getElementById('report_file_input').click()">
+                            上传文件并分析
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab_global_settings" class="tab-content">
                 <!-- 模块一：飞书通知通道配置 -->
             <div class="glass-panel">
                 <div class="panel-header">
@@ -799,21 +845,6 @@
                 </div>
             </div>
 
-            <!-- 模块二：静态 KPI 警戒红线设定 -->
-            <div class="glass-panel">
-                <div class="panel-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" stroke-width="2">
-                            <path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
-                        </svg>
-                        静态指标考核红线值
-                    </h2>
-                </div>
-
-                <div id="dynamic_kpi_sliders_container" style="display: flex; flex-direction: column; gap: 20px;">
-                    <!-- 动态生成的 KPI 滑块将插入此处 -->
-                </div>
-            </div>
 
             <!-- 模块三：AI 诊断模型与环境 -->
             <div class="glass-panel">
@@ -869,12 +900,9 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>提示词环境预设 (Prompt Templates)</label>
-                        <select id="prompt_env_selector" title="提示词模板选择" onchange="changePromptEnv()">
-                            <option value="default" selected>默认常规考核</option>
-                            <option value="strict">严格模式 (大促/双十一)</option>
-                            <option value="encouraging">鼓励模式 (淡季/团建期)</option>
-                            <option value="detailed">极度详细 (异常深挖版)</option>
+                        <label>选择生成报告的指标大分类</label>
+                        <select id="prompt_category_selector" title="选择分类" onchange="changePromptCategory()">
+                            <option value="" disabled selected>-- 请选择分类 --</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -887,36 +915,8 @@
                     <button class="btn btn-secondary" onclick="resetConfig()">重置配置</button>
                     <button class="btn btn-primary" onclick="saveConfiguration()">保存并同步 rules.json</button>
                 </div>
-
-                <!-- 模块四：报告诊断与分发入口 -->
-                <div class="glass-panel" style="border: 1px solid rgba(6, 182, 212, 0.25); background: rgba(6, 182, 212, 0.03); margin-top: 24px;">
-                    <div class="panel-header">
-                        <h2>
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                                <polyline points="10 9 9 9 8 9"/>
-                            </svg>
-                            运行报告诊断并生成结论
-                        </h2>
-                    </div>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
-                        运行物流网络诊断，通过 AI 专家大模型提取当前时效指标并生成定责考核报告。诊断生成后系统将自动跳转至独立编辑器与 Live 卡片预览中心进行二次编辑与分发。
-                    </p>
-                    <div class="btn-group">
-                        <button class="btn btn-primary pulse" id="btn_generate_report" style="height: 48px; background: linear-gradient(135deg, var(--accent-cyan), #0891b2);" onclick="generateAndOpenEditor()">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 8v8M8 12h8"/>
-                            </svg>
-                            运行诊断并生成报告结论
-                        </button>
-                    </div>
-                </div>
-            </div>
-            </div> <!-- 关闭 tab_system_config -->
+            </div> <!-- 关闭 模块三 glass-panel -->
+            </div> <!-- 关闭 tab_global_settings -->
 
             <!-- 选项卡二：静态规则库管理 -->
             <div id="tab_rules_manager" class="tab-content">
@@ -931,17 +931,17 @@
                         </h2>
                     </div>
                     
-                    <div id="rules_metrics_list">
+                    <div id="rules_categories_list">
                         <!-- 动态渲染 -->
                     </div>
                     
                     <div class="btn-group" style="margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="addNewMetricRow()">
+                        <button class="btn btn-secondary" onclick="addNewCategoryCard()">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19"/>
                                 <line x1="5" y1="12" x2="19" y2="12"/>
                             </svg>
-                            新增考核/通晒指标
+                            新增指标分类
                         </button>
                     </div>
                 </div>
@@ -1047,6 +1047,14 @@
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
                         您可以上传时效考核指标的规则图片（如截图、拍照图片）、文本文档，或者直接粘贴规则描述文本、网页链接。AI 诊断引擎将自动解析并提取出结构化的指标定义（包括指标名称、红线值、计算公式等）和车型财务容积配置。
                     </p>
+
+                    <!-- 选择目标大分类 -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>提取规则所属的大分类 (提取前必须选择)</label>
+                        <select id="extractor_target_category" title="选择目标分类">
+                            <option value="" disabled selected>-- 请选择分类 --</option>
+                        </select>
+                    </div>
 
                     <!-- 文件上传/拖拽区域 -->
                     <div class="form-group" style="margin-bottom: 20px;">
@@ -1159,7 +1167,16 @@
                     document.getElementById('llm_api_key').value = fs.llm_api_key || '';
                     document.getElementById('llm_api_base').value = fs.llm_api_base || '';
                     document.getElementById('llm_model').value = fs.llm_model || 'gpt-4o';
-                    document.getElementById('llm_custom_prompt').value = fs.llm_custom_prompt || '';
+                    const defaultTemplate = '你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息（如清关提货、干线Linehaul、尾程承运商注入、Hub集包），输出专业的定责考核报告，重点关注承运商截单时间和交件准点率。语言客观中立。';
+                    window.llmPromptsCache = fs.llm_custom_prompts || {};
+                    populateCategorySelector();
+                    if (document.getElementById('prompt_category_selector').options.length > 1) {
+                        document.getElementById('prompt_category_selector').selectedIndex = 1;
+                        changePromptCategory();
+                    }
+                    if (document.getElementById('report_target_category') && document.getElementById('report_target_category').options.length > 1) {
+                        document.getElementById('report_target_category').selectedIndex = 1;
+                    }
 
                     // 2. 动态渲染 KPI 设定数值
                     renderDynamicKpiSliders();
@@ -1169,67 +1186,6 @@
                 });
         });
 
-        // 渲染动态 KPI 滑块
-        function renderDynamicKpiSliders() {
-            const container = document.getElementById('dynamic_kpi_sliders_container');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            const metrics = currentRulesConfig.metrics || {};
-            let html = '';
-            
-            // 筛选出定义了 red_line 的指标，或者强制让所有“考核”级别的都有滑块（这里采取读取已有 red_line 为准）
-            const kpiMetrics = Object.keys(metrics).filter(name => metrics[name].red_line !== undefined && metrics[name].red_line !== null);
-            
-            // 按每行两个组织
-            for (let i = 0; i < kpiMetrics.length; i += 2) {
-                html += '<div class="form-row">';
-                
-                // 第一个指标
-                const name1 = kpiMetrics[i];
-                const val1 = Math.round(metrics[name1].red_line * 100);
-                const id1 = 'kpi_dynamic_' + i;
-                html += `
-                    <div class="form-group">
-                        <label for="${id1}">${name1}红线 (%)</label>
-                        <div class="slider-container">
-                            <input type="range" id="${id1}" data-metric="${name1}" min="1" max="100" value="${val1}" oninput="updateDynamicKpiValue('${id1}')">
-                            <span class="slider-value" id="${id1}_val">${val1}%</span>
-                        </div>
-                    </div>
-                `;
-                
-                // 第二个指标（如果有）
-                if (i + 1 < kpiMetrics.length) {
-                    const name2 = kpiMetrics[i + 1];
-                    const val2 = Math.round(metrics[name2].red_line * 100);
-                    const id2 = 'kpi_dynamic_' + (i + 1);
-                    html += `
-                        <div class="form-group">
-                            <label for="${id2}">${name2}红线 (%)</label>
-                            <div class="slider-container">
-                                <input type="range" id="${id2}" data-metric="${name2}" min="1" max="100" value="${val2}" oninput="updateDynamicKpiValue('${id2}')">
-                                <span class="slider-value" id="${id2}_val">${val2}%</span>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    html += `<div class="form-group" style="visibility: hidden;"></div>`; // 占位
-                }
-                
-                html += '</div>';
-            }
-            
-            container.innerHTML = html;
-        }
-
-        function updateDynamicKpiValue(id) {
-            const input = document.getElementById(id);
-            const valSpan = document.getElementById(id + '_val');
-            if (valSpan && input) {
-                valSpan.innerText = input.value + '%';
-            }
-        }
 
         // 选项卡切换逻辑
         function switchTab(tabId) {
@@ -1246,12 +1202,12 @@
 
         // 动态渲染规则配置
         function renderRulesManager() {
-            const metricsContainer = document.getElementById('rules_metrics_list');
-            metricsContainer.innerHTML = '';
+            const categoriesContainer = document.getElementById('rules_categories_list');
+            if (categoriesContainer) categoriesContainer.innerHTML = '';
             
-            const metrics = currentRulesConfig.metrics || {};
-            Object.entries(metrics).forEach(([name, meta]) => {
-                addNewMetricRow(name, meta.control_level, meta.data_source, meta.red_line, meta.description);
+            const categories = currentRulesConfig.categories || {};
+            Object.entries(categories).forEach(([catName, catData]) => {
+                addNewCategoryCard(catName, catData.data_source || '', catData.metrics || {});
             });
             
             const capacityContainer = document.getElementById('rules_capacity_list');
@@ -1264,7 +1220,94 @@
         }
 
         // 新增/删除指标行
-        function addNewMetricRow(name='', controlLevel='考核', dataSource='', redLine='', description='') {
+        
+        function createMetricRowHtml(name, meta) {
+            const controlLevel = meta.control_level || '考核';
+            const redLine = meta.red_line !== undefined && meta.red_line !== null ? meta.red_line : '';
+            const desc = meta.description || '';
+            const redLinePercent = redLine !== '' ? Math.round(redLine * 100) : 95;
+            return `
+                <div class="rule-card-item metric-row" style="border-left: 3px solid var(--accent-blue); background:rgba(255,255,255,0.02); padding:10px; margin-bottom:10px;">
+                    <div style="display:flex; gap:10px; align-items:flex-end;">
+                        <div class="form-group" style="flex:2; margin-bottom:0;">
+                            <label style="font-size:0.8rem;">指标名称</label>
+                            <input type="text" class="metric-name" value="${name}" placeholder="如：班次发货及时率">
+                        </div>
+                        <div class="form-group" style="flex:1; margin-bottom:0;">
+                            <label style="font-size:0.8rem;">管控级别</label>
+                            <select class="metric-level">
+                                <option value="考核" ${controlLevel === '考核' ? 'selected' : ''}>考核</option>
+                                <option value="通晒" ${controlLevel === '通晒' ? 'selected' : ''}>通晒</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:2; margin-bottom:0;">
+                            <label style="font-size:0.8rem;">红线值</label>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="number" step="0.01" class="metric-redline" value="${redLine}" placeholder="如 0.95" style="width:70px;" oninput="this.nextElementSibling.value = Math.round(this.value * 100)">
+                                <input type="range" class="metric-redline-slider" min="1" max="100" value="${redLinePercent}" style="flex:1; margin:0;" oninput="this.previousElementSibling.value = (this.value / 100).toFixed(2)">
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex:3; margin-bottom:0;">
+                            <label style="font-size:0.8rem;">说明</label>
+                            <input type="text" class="metric-desc" value="${desc}" placeholder="规则业务说明">
+                        </div>
+                        <button class="btn delete-btn" style="padding:8px; margin-bottom:0;" onclick="this.closest('.metric-row').remove()">删除</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addNewCategoryCard(catName='', dataSource='', metrics={}) {
+            const container = document.getElementById('rules_categories_list');
+            const catId = 'cat_' + Date.now() + Math.floor(Math.random() * 1000);
+            const div = document.createElement('div');
+            div.className = 'category-card';
+            div.style.border = '1px solid rgba(255,255,255,0.1)';
+            div.style.padding = '16px';
+            div.style.marginBottom = '20px';
+            div.style.borderRadius = '8px';
+            div.style.background = 'rgba(0,0,0,0.2)';
+            
+            let metricsHtml = '';
+            Object.entries(metrics).forEach(([mName, meta]) => {
+                metricsHtml += createMetricRowHtml(mName, meta);
+            });
+
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <input type="text" class="cat-name-input" value="${catName}" placeholder="输入大分类名称 (如：TMS类指标)" style="font-size:1.1em; font-weight:bold; width:300px;">
+                    </div>
+                    <button class="btn delete-btn" style="margin-left:12px; padding:6px 12px;" onclick="this.closest('.category-card').remove()">删除分类</button>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-size:0.85rem; color:var(--text-secondary);">该分类对应的数据源链接 (支持长链接检查)</label>
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <input type="text" class="cat-source-input" value="${dataSource}" placeholder="填写该分类通用的数据源链接 (飞书URL)..." style="flex:1; margin-bottom:0;" oninput="triggerUrlValidation(this)">
+                        <div class="validation-status" style="width:200px; text-align:right;"></div>
+                    </div>
+                </div>
+                <div class="cat-metrics-list" id="${catId}_metrics">
+                    ${metricsHtml}
+                </div>
+                <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="addNewMetricToCat('${catId}')">+ 增加一条指标</button>
+            `;
+            container.appendChild(div);
+            
+            if (dataSource) {
+                const sourceInput = div.querySelector('.cat-source-input');
+                if (sourceInput) triggerUrlValidation(sourceInput);
+            }
+        }
+
+        function addNewMetricToCat(catId) {
+            const metricsContainer = document.getElementById(catId + '_metrics');
+            if (metricsContainer) {
+                metricsContainer.insertAdjacentHTML('beforeend', createMetricRowHtml('', {}));
+            }
+        }
+
+        function old_addNewMetricRow_removed(name='', controlLevel='考核', dataSource='', redLine='', description='') {
             const metricsContainer = document.getElementById('rules_metrics_list');
             const row = document.createElement('div');
             row.className = 'rule-card-item';
@@ -1350,31 +1393,39 @@
 
         // 保存全部规则
         function saveAllRulesToServer() {
-            const metrics = {};
+            const categories = {};
             const vehicle_capacity = {};
             
-            const metricCards = document.querySelectorAll('#rules_metrics_list .rule-card-item');
-            metricCards.forEach(card => {
-                const nameInput = card.querySelector('.metric-name');
-                const levelSelect = card.querySelector('.metric-level');
-                const sourceInput = card.querySelector('.metric-source');
-                const redlineInput = card.querySelector('.metric-redline');
-                const descTextarea = card.querySelector('.metric-desc');
+            const catCards = document.querySelectorAll('#rules_categories_list .category-card');
+            catCards.forEach(card => {
+                const catName = card.querySelector('.cat-name-input').value.trim();
+                const catSource = card.querySelector('.cat-source-input').value.trim();
+                if (!catName) return;
                 
-                const name = nameInput.value.trim();
-                if (!name) return;
+                const metrics = {};
+                const metricRows = card.querySelectorAll('.metric-row');
+                metricRows.forEach(row => {
+                    const name = row.querySelector('.metric-name').value.trim();
+                    if (!name) return;
+                    
+                    const level = row.querySelector('.metric-level').value;
+                    const redlineInput = row.querySelector('.metric-redline').value.trim();
+                    const desc = row.querySelector('.metric-desc').value.trim();
+                    
+                    const meta = {
+                        control_level: level,
+                        description: desc
+                    };
+                    if (redlineInput !== '') {
+                        meta.red_line = parseFloat(redlineInput);
+                    }
+                    metrics[name] = meta;
+                });
                 
-                const meta = {
-                    control_level: levelSelect.value,
-                    data_source: sourceInput.value.trim(),
-                    description: descTextarea.value.trim()
+                categories[catName] = {
+                    data_source: catSource,
+                    metrics: metrics
                 };
-                
-                if (redlineInput.value.trim() !== '') {
-                    meta.red_line = parseFloat(redlineInput.value);
-                }
-                
-                metrics[name] = meta;
             });
             
             const capacityCards = document.querySelectorAll('#rules_capacity_list .capacity-card-item');
@@ -1391,7 +1442,7 @@
             });
             
             const payload = {
-                metrics,
+                categories,
                 vehicle_capacity
             };
             
@@ -1626,20 +1677,50 @@
             }
         }
 
-        function changePromptEnv() {
-            const env = document.getElementById('prompt_env_selector').value;
+        let lastSelectedCategory = null;
+        
+        function populateCategorySelector() {
+            const sel1 = document.getElementById('prompt_category_selector');
+            const sel2 = document.getElementById('extractor_target_category');
+            const sel3 = document.getElementById('report_target_category');
+            if (sel1) sel1.innerHTML = '<option value="" disabled selected>-- 请选择分类 --</option>';
+            if (sel2) sel2.innerHTML = '<option value="" disabled selected>-- 请选择分类 --</option>';
+            if (sel3) sel3.innerHTML = '<option value="" disabled selected>-- 请选择分类 --</option>';
+            
+            const categories = currentRulesConfig.categories || {};
+            Object.keys(categories).forEach(cat => {
+                if (sel1) {
+                    const opt1 = document.createElement('option');
+                    opt1.value = cat;
+                    opt1.innerText = cat;
+                    sel1.appendChild(opt1);
+                }
+                if (sel2) {
+                    const opt2 = document.createElement('option');
+                    opt2.value = cat;
+                    opt2.innerText = cat;
+                    sel2.appendChild(opt2);
+                }
+                if (sel3) {
+                    const opt3 = document.createElement('option');
+                    opt3.value = cat;
+                    opt3.innerText = cat;
+                    sel3.appendChild(opt3);
+                }
+            });
+        }
+
+        function changePromptCategory() {
             const promptBox = document.getElementById('llm_custom_prompt');
-            
-            const templates = {
-                'default': '你是一个资深物流调度专家。请根据提供的时效数据和异常信息，输出专业的定责考核报告。语言客观中立。',
-                'strict': '你是一个非常严格的大促期物流风控专家。当前处于双十一/大促期间，任何轻微的延误都必须被严厉警告。请在报告中强调全员危机感，指出所有时效异常并要求1小时内给出整改方案。',
-                'encouraging': '你是一个充满活力的物流团队政委。目前处于业务淡季，请在指出问题的同时，多多鼓励团队，用词温和，强调持续优化，少用严厉的考核字眼。',
-                'detailed': '你是一个数据挖掘分析师。请极度详细地剖析每一个异常，推测可能的根因（如天气、运力不足、人员操作不规范等），给出多维度的行动建议。'
-            };
-            
-            if (templates[env]) {
-                promptBox.value = templates[env];
+            if (lastSelectedCategory) {
+                window.llmPromptsCache[lastSelectedCategory] = promptBox.value;
             }
+            
+            const cat = document.getElementById('prompt_category_selector').value;
+            lastSelectedCategory = cat;
+            
+            const defaultPrompt = '你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息，输出专业的定责考核报告。';
+            promptBox.value = window.llmPromptsCache[cat] || defaultPrompt;
         }
 
         function saveConfiguration() {
@@ -1653,15 +1734,9 @@
             const llmApiKey = document.getElementById('llm_api_key').value;
             const llmApiBase = document.getElementById('llm_api_base').value;
             const llmModel = document.getElementById('llm_model').value;
-            const llmCustomPrompt = document.getElementById('llm_custom_prompt').value;
-
-            const dynamicKpis = {};
-            const sliderInputs = document.querySelectorAll('#dynamic_kpi_sliders_container input[type="range"]');
-            sliderInputs.forEach(input => {
-                const metricName = input.getAttribute('data-metric');
-                const val = parseFloat(input.value) / 100;
-                dynamicKpis[metricName] = val;
-            });
+            if (lastSelectedCategory) {
+                window.llmPromptsCache[lastSelectedCategory] = document.getElementById('llm_custom_prompt').value;
+            }
 
             const payload = {
                 channel,
@@ -1670,11 +1745,10 @@
                 app_id: appId,
                 app_secret: appSecret,
                 chat_id: chatId,
-                dynamic_kpis: dynamicKpis,
                 llm_api_key: llmApiKey,
                 llm_api_base: llmApiBase,
                 llm_model: llmModel,
-                llm_custom_prompt: llmCustomPrompt
+                llm_custom_prompts: window.llmPromptsCache
             };
 
             const notif = document.getElementById('notif');
@@ -1692,20 +1766,23 @@
                 if (data.success) {
                     notif.innerText = '配置已保存！feishu_config.json 与 rules.json 已成功同步！';
                     notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                    setTimeout(() => {
+                        notif.classList.remove('show');
+                    }, 3000);
                 } else {
                     notif.innerText = '保存失败: ' + (data.error || '未知错误');
                     notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                    setTimeout(() => {
+                        notif.classList.remove('show');
+                    }, 6000);
                 }
-                setTimeout(() => {
-                    notif.classList.remove('show');
-                }, 3000);
             })
             .catch(err => {
                 notif.innerText = '保存失败: ' + err.message;
                 notif.style.background = 'rgba(239, 68, 68, 0.9)';
                 setTimeout(() => {
                     notif.classList.remove('show');
-                }, 3000);
+                }, 6000);
             });
         }
 
@@ -1773,7 +1850,7 @@
             });
         }
 
-        function generateAndOpenEditor() {
+        function generateAndOpenEditor(file = null) {
             const notif = document.getElementById('notif');
             notif.innerText = '正在运行诊断，提取指标数据并调用 AI 专家生成报告草稿...';
             notif.style.background = 'rgba(59, 130, 246, 0.9)';
@@ -1785,10 +1862,32 @@
                 btn.innerText = '正在生成诊断中...';
             }
 
-            fetch('/api/generate_report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            })
+            const cat = document.getElementById('report_target_category') ? document.getElementById('report_target_category').value : '';
+            if (!cat) {
+                alert("请先选择生成报告的分类！");
+                notif.classList.remove('show');
+                if (btn) { btn.disabled = false; btn.innerText = '运行诊断并生成报告结论'; }
+                return;
+            }
+            
+            let fetchOptions;
+            if (file) {
+                const formData = new FormData();
+                formData.append('target_category', cat);
+                formData.append('file', file);
+                fetchOptions = {
+                    method: 'POST',
+                    body: formData
+                };
+            } else {
+                fetchOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target_category: cat })
+                };
+            }
+
+            fetch('/api/generate_report', fetchOptions)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -1887,6 +1986,15 @@
             const notif = document.getElementById('notif');
             const btn = document.getElementById('btn_run_extractor');
             const textInput = document.getElementById('extractor_text_input').value.trim();
+            const targetCat = document.getElementById('extractor_target_category');
+
+            if (targetCat && !targetCat.value) {
+                notif.innerText = '请先选择指标大类后再进行 AI 智能解析。';
+                notif.style.background = 'rgba(239, 68, 68, 0.9)'; // Red
+                notif.classList.add('show');
+                setTimeout(() => notif.classList.remove('show'), 3000);
+                return;
+            }
 
             if (!extractorSelectedFile && !textInput) {
                 notif.innerText = '请先上传文件或粘贴/输入规则说明文字。';
@@ -1979,10 +2087,6 @@
                                         <option value="考核" ${meta.control_level === '考核' ? 'selected' : ''}>考核</option>
                                         <option value="通晒" ${meta.control_level === '通晒' ? 'selected' : ''}>通晒</option>
                                     </select>
-                                </div>
-                                <div class="form-group" style="flex: 2;">
-                                    <label>数据源配置</label>
-                                    <input type="text" class="ext-metric-source" value="${meta.data_source || ''}">
                                 </div>
                             </div>
                         </div>
@@ -2096,6 +2200,13 @@
         }
 
         function saveExtractedRulesToLibrary() {
+            const targetCatEl = document.getElementById('extractor_target_category');
+            const targetCat = targetCatEl ? targetCatEl.value : null;
+            if (!targetCat) {
+                alert("请先选择指标大类！");
+                return;
+            }
+            
             // Read extracted metrics inputs
             const metricRows = document.querySelectorAll('#extracted_metrics_list .rule-card-item');
             const newMetrics = {};
@@ -2104,14 +2215,12 @@
                 if (!name) return;
                 
                 const level = row.querySelector('.ext-metric-level').value;
-                const source = row.querySelector('.ext-metric-source').value.trim();
                 const redlineInput = row.querySelector('.ext-metric-redline').value.trim();
                 const redline = redlineInput !== '' ? parseFloat(redlineInput) : null;
                 const desc = row.querySelector('.ext-metric-desc').value.trim();
                 
                 newMetrics[name] = {
                     control_level: level,
-                    data_source: source,
                     description: desc,
                     red_line: redline
                 };
@@ -2129,10 +2238,13 @@
             });
 
             // Merge into currentRulesConfig
-            if (!currentRulesConfig.metrics) currentRulesConfig.metrics = {};
+            if (!currentRulesConfig.categories) currentRulesConfig.categories = {};
+            if (!currentRulesConfig.categories[targetCat]) {
+                currentRulesConfig.categories[targetCat] = { data_source: '', metrics: {} };
+            }
             if (!currentRulesConfig.vehicle_capacity) currentRulesConfig.vehicle_capacity = {};
 
-            Object.assign(currentRulesConfig.metrics, newMetrics);
+            Object.assign(currentRulesConfig.categories[targetCat].metrics, newMetrics);
             Object.assign(currentRulesConfig.vehicle_capacity, newCapacity);
 
             // Re-render rules manager UI

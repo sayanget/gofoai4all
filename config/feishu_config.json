@@ -4,7 +4,10 @@
   "app_id": "cli_a9fc1c1c0bb8dbcb",
   "app_secret": "XeStEZgDlQQUnUU93w1d3emYSdMSfiq6",
   "chat_id": "oc_9deed7667aec86791fc93583b28ae2c6",
-  "llm_api_key": "sk-gemini",
-  "llm_api_base": "http://localhost:8082/v1",
-  "llm_model": "gemini-2.5-pro"
+  "llm_api_key": "sk-31d9d6efb7664d7eaa6ef50cf516e198",
+  "llm_api_base": "http://127.0.0.1:8045",
+  "llm_model": "gemini-3.5-flash-extra-low",
+  "llm_custom_prompts": {
+    "默认分类": "你是一个专注中美跨境供应链的数据分析师。请极度详细地剖析美国尾程网络的每一个异常，推测可能的根因（如卡车资源短缺、仓库爆仓、天气因素、司机工时限制ELD等），给出多维度的改善行动建议。筛选月是6月，车辆出发地是CNO.H的数据进行分析。"
+  }
 }

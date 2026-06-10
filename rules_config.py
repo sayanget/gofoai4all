@@ -21,7 +21,11 @@ try:
     with open(config_path, "r", encoding="utf-8") as f:
         _rules_data = json.load(f)
         VEHICLE_CAPACITY = _rules_data.get("vehicle_capacity", {})
-        METRICS_CONFIG = _rules_data.get("metrics", {})
+        _categories = _rules_data.get("categories", {})
+        METRICS_CONFIG = {}
+        for cat_data in _categories.values():
+            if "metrics" in cat_data:
+                METRICS_CONFIG.update(cat_data["metrics"])
 except Exception as e:
     print(f"Error loading rules.json: {e}")
 
