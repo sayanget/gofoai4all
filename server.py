@@ -496,38 +496,81 @@ def extract_rules():
 
         if api_key:
             try:
-                # Prepare LLM request payload
-                messages = [{"role": "system", "content": system_prompt}]
-                
-                if image_base64:
-                    user_content = [
-                        {"type": "text", "text": "请分析图片，提取其中的物流考核指标规则与车型容积配置。请直接返回标准的 JSON，不要用 markdown 格式包裹。"},
-                        {"type": "image_url", "image_url": {"url": f"data:{image_mime};base64,{image_base64}"}}
-                    ]
-                    if text_content:
-                        user_content.append({"type": "text", "text": f"补充上下文：\n{text_content}"})
-                    messages.append({"role": "user", "content": user_content})
+                if "gemini" in model.lower():
+                    from google import genai
+                    from google.genai import types
+                    
+                    http_options = {'base_url': api_base} if api_base else None
+                    client = genai.Client(
+                        api_key=api_key or "dummy_key",
+                        http_options=http_options
+                    )
+                    
+                    if image_base64:
+                        import base64
+                        img_bytes = base64.b64decode(image_base64)
+                        prompt = "请分析图片，提取其中的物流考核指标规则与车型容积配置。请直接返回标准的 JSON，不要用 markdown 格式包裹。"
+                        if text_content:
+                            prompt += f"\n补充上下文：\n{text_content}"
+                            
+                        response = client.models.generate_content(
+                            model=model,
+                            contents=[
+                                prompt, 
+                                types.Part.from_bytes(data=img_bytes, mime_type=image_mime or "image/jpeg")
+                            ],
+                            config=types.GenerateContentConfig(
+                                system_instruction=system_prompt,
+                                temperature=0.1
+                            )
+                        )
+                    else:
+                        prompt = f"请分析以下文本，提取其中的物流考核指标规则与车型容积配置：\n{text_content}"
+                        response = client.models.generate_content(
+                            model=model,
+                            contents=prompt,
+                            config=types.GenerateContentConfig(
+                                system_instruction=system_prompt,
+                                temperature=0.1
+                            )
+                        )
+                    
+                    raw_content = response.text
+                    if not raw_content or not raw_content.strip():
+                        raise ValueError("大模型返回空文本或未包含有效内容")
                 else:
-                    messages.append({"role": "user", "content": f"请分析以下文本，提取其中的物流考核指标规则与车型容积配置：\n{text_content}"})
-
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}"
-                }
-                payload = {
-                    "model": model,
-                    "messages": messages,
-                    "temperature": 0.1
-                }
-                if "gpt" in model.lower():
-                    payload["response_format"] = {"type": "json_object"}
-
-                url_endpoint = f"{api_base.rstrip('/')}/chat/completions"
-                resp = requests.post(url_endpoint, headers=headers, json=payload, timeout=40)
-                resp.raise_for_status()
-
-                result_json = resp.json()
-                raw_content = result_json["choices"][0]["message"]["content"].strip()
+                    # Prepare LLM request payload for OpenAI compatible APIs
+                    messages = [{"role": "system", "content": system_prompt}]
+                    
+                    if image_base64:
+                        user_content = [
+                            {"type": "text", "text": "请分析图片，提取其中的物流考核指标规则与车型容积配置。请直接返回标准的 JSON，不要用 markdown 格式包裹。"},
+                            {"type": "image_url", "image_url": {"url": f"data:{image_mime};base64,{image_base64}"}}
+                        ]
+                        if text_content:
+                            user_content.append({"type": "text", "text": f"补充上下文：\n{text_content}"})
+                        messages.append({"role": "user", "content": user_content})
+                    else:
+                        messages.append({"role": "user", "content": f"请分析以下文本，提取其中的物流考核指标规则与车型容积配置：\n{text_content}"})
+    
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {api_key}"
+                    }
+                    payload = {
+                        "model": model,
+                        "messages": messages,
+                        "temperature": 0.1
+                    }
+                    if "gpt" in model.lower():
+                        payload["response_format"] = {"type": "json_object"}
+    
+                    url_endpoint = f"{api_base.rstrip('/')}/chat/completions"
+                    resp = requests.post(url_endpoint, headers=headers, json=payload, timeout=40, verify=False)
+                    resp.raise_for_status()
+    
+                    result_json = resp.json()
+                    raw_content = result_json["choices"][0]["message"]["content"].strip()
 
                 if raw_content.startswith("```"):
                     lines = raw_content.splitlines()
