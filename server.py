@@ -74,43 +74,8 @@ def save_config():
     llm_model = data.get("llm_model", "")
     
     # --- AI 配置自动验证逻辑 ---
-    if llm_api_key or llm_api_base or llm_model:
-        if "gemini" in llm_model.lower():
-            try:
-                import google.generativeai as genai
-                # 兼容 Gemini 代理的客户端配置
-                client_options = {'api_endpoint': llm_api_base} if llm_api_base else None
-                genai.configure(
-                    api_key=llm_api_key or "dummy_key",
-                    transport='rest',
-                    client_options=client_options
-                )
-                model = genai.GenerativeModel(llm_model)
-                # 简单的测试内容验证连通性
-                model.generate_content("Hello")
-            except Exception as e:
-                logger.error(f"Gemini Validation Error: {e}")
-                return jsonify({"success": False, "error": f"AI 智能诊断引擎配置验证失败 (Gemini SDK)：无法连接或授权失败。报错信息：{type(e).__name__} - {e}"}), 400
-        else:
-            import requests
-            import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            
-            test_base = llm_api_base.rstrip("/") if llm_api_base else "https://api.openai.com/v1"
-            test_url = f"{test_base}/models"
-            headers = {}
-            if llm_api_key:
-                headers["Authorization"] = f"Bearer {llm_api_key}"
-                
-            try:
-                resp = requests.get(test_url, headers=headers, timeout=5, verify=False)
-                if resp.status_code == 401:
-                    return jsonify({"success": False, "error": "AI 智能诊断引擎配置验证失败：API Key 无效或未授权，请检查后重试！"}), 400
-                elif resp.status_code != 200:
-                    return jsonify({"success": False, "error": f"AI 智能诊断引擎配置验证失败：服务器返回异常状态码 {resp.status_code}，请检查 API Base URL！"}), 400
-            except requests.exceptions.RequestException as e:
-                logger.error(f"LLM Validation Error: {e}")
-                return jsonify({"success": False, "error": f"AI 智能诊断引擎配置验证失败：无法连接到大模型接口（{test_url}）。可能是端口未开启或地址错误。报错信息：{type(e).__name__}。请修改配置后重试！"}), 400
+    # 已移除：不在此处做强校验，防止网络超时导致整个规则无法保存。
+    # 用户可以在实际诊断执行时暴露错误。
     # ---------------------------
 
     feishu_config["llm_api_key"] = llm_api_key
