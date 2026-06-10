@@ -1178,8 +1178,7 @@
                         document.getElementById('report_target_category').selectedIndex = 1;
                     }
 
-                    // 2. 动态渲染 KPI 设定数值
-                    renderDynamicKpiSliders();
+                    // 2. 动态渲染 KPI 设定数值 (已弃用，直接在规则里显示)
                 })
                 .catch(err => {
                     console.error('无法加载初始化配置:', err);
@@ -1386,9 +1385,9 @@
             }
         }
 
-        // 同步 KPI 输入项回到第一页
+        // 同步 KPI 输入项回到第一页 (功能已弃用)
         function syncBasicKPIInputs() {
-            renderDynamicKpiSliders();
+            // no-op
         }
 
         // 保存全部规则
