@@ -761,11 +761,15 @@
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
                         运行物流网络诊断，通过 AI 专家大模型提取当前时效指标并生成定责考核报告。诊断生成后系统将自动跳转至独立编辑器与 Live 卡片预览中心进行二次编辑与分发。
                     </p>
-                    <div class="form-group" style="margin-bottom: 24px;">
+                    <div class="form-group" style="margin-bottom: 16px;">
                         <label>选择要执行诊断的指标大分类</label>
-                        <select id="report_target_category" title="选择分类" style="font-size:1.1em; padding:12px;">
+                        <select id="report_target_category" title="选择分类" style="font-size:1.1em; padding:12px;" onchange="changePromptCategory()">
                             <option value="" disabled selected>-- 请选择分类 --</option>
                         </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label for="llm_custom_prompt">自定义诊断提示词 (System Prompt)</label>
+                        <textarea id="llm_custom_prompt" rows="4" placeholder="输入大模型生成报告时使用的系统提示词（留空将使用内部默认提示词）..." style="width: 100%; padding: 12px; font-family: inherit; border: 1px solid var(--border-color); border-radius: 8px; resize: vertical;"></textarea>
                     </div>
                     <div class="btn-group" style="display:flex; gap:12px;">
                         <button class="btn btn-primary pulse" id="btn_generate_report" style="height: 48px; flex:2; background: linear-gradient(135deg, var(--accent-cyan), #0891b2);" onclick="generateAndOpenEditor()">
@@ -898,18 +902,7 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>选择生成报告的指标大分类</label>
-                        <select id="prompt_category_selector" title="选择分类" onchange="changePromptCategory()">
-                            <option value="" disabled selected>-- 请选择分类 --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="llm_custom_prompt">自定义诊断提示词 (System Prompt)</label>
-                        <textarea id="llm_custom_prompt" rows="4" placeholder="输入大模型生成报告时使用的系统提示词（留空将使用内部默认提示词）..."></textarea>
-                    </div>
-                </div>
+                <!-- System prompt selector moved to execution tab -->
 
                 <div class="btn-group">
                     <button class="btn btn-secondary" onclick="resetConfig()">重置配置</button>
@@ -1170,12 +1163,9 @@
                     const defaultTemplate = '你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息（如清关提货、干线Linehaul、尾程承运商注入、Hub集包），输出专业的定责考核报告，重点关注承运商截单时间和交件准点率。语言客观中立。';
                     window.llmPromptsCache = fs.llm_custom_prompts || {};
                     populateCategorySelector();
-                    if (document.getElementById('prompt_category_selector').options.length > 1) {
-                        document.getElementById('prompt_category_selector').selectedIndex = 1;
-                        changePromptCategory();
-                    }
                     if (document.getElementById('report_target_category') && document.getElementById('report_target_category').options.length > 1) {
                         document.getElementById('report_target_category').selectedIndex = 1;
+                        changePromptCategory();
                     }
 
                     // 2. 动态渲染 KPI 设定数值 (已弃用，直接在规则里显示)
@@ -1679,21 +1669,13 @@
         let lastSelectedCategory = null;
         
         function populateCategorySelector() {
-            const sel1 = document.getElementById('prompt_category_selector');
             const sel2 = document.getElementById('extractor_target_category');
             const sel3 = document.getElementById('report_target_category');
-            if (sel1) sel1.innerHTML = '<option value="" disabled selected>-- 请选择分类 --</option>';
             if (sel2) sel2.innerHTML = '<option value="" disabled selected>-- 请选择分类 --</option>';
             if (sel3) sel3.innerHTML = '<option value="" disabled selected>-- 请选择分类 --</option>';
             
             const categories = currentRulesConfig.categories || {};
             Object.keys(categories).forEach(cat => {
-                if (sel1) {
-                    const opt1 = document.createElement('option');
-                    opt1.value = cat;
-                    opt1.innerText = cat;
-                    sel1.appendChild(opt1);
-                }
                 if (sel2) {
                     const opt2 = document.createElement('option');
                     opt2.value = cat;
@@ -1715,14 +1697,14 @@
                 window.llmPromptsCache[lastSelectedCategory] = promptBox.value;
             }
             
-            const cat = document.getElementById('prompt_category_selector').value;
+            const cat = document.getElementById('report_target_category').value;
             lastSelectedCategory = cat;
             
             const defaultPrompt = '你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息，输出专业的定责考核报告。';
             promptBox.value = window.llmPromptsCache[cat] || defaultPrompt;
         }
 
-        function saveConfiguration() {
+        function saveConfiguration(silent = false) {
             const channel = document.getElementById('channel_select').value;
             const webhookUrl = document.getElementById('webhook_url').value;
             const secretKey = document.getElementById('secret_key').value;
@@ -1751,9 +1733,11 @@
             };
 
             const notif = document.getElementById('notif');
-            notif.innerText = '正在保存配置并更新本地文件...';
-            notif.style.background = 'rgba(59, 130, 246, 0.9)';
-            notif.classList.add('show');
+            if (!silent) {
+                notif.innerText = '正在保存配置并更新本地文件...';
+                notif.style.background = 'rgba(59, 130, 246, 0.9)';
+                notif.classList.add('show');
+            }
 
             fetch('/api/save_config', {
                 method: 'POST',
@@ -1762,26 +1746,30 @@
             })
             .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    notif.innerText = '配置已保存！feishu_config.json 与 rules.json 已成功同步！';
-                    notif.style.background = 'rgba(16, 185, 129, 0.9)';
-                    setTimeout(() => {
-                        notif.classList.remove('show');
-                    }, 3000);
-                } else {
-                    notif.innerText = '保存失败: ' + (data.error || '未知错误');
+                if (!silent) {
+                    if (data.success) {
+                        notif.innerText = '配置已保存！feishu_config.json 与 rules.json 已成功同步！';
+                        notif.style.background = 'rgba(16, 185, 129, 0.9)';
+                        setTimeout(() => {
+                            notif.classList.remove('show');
+                        }, 3000);
+                    } else {
+                        notif.innerText = '保存失败: ' + (data.error || '未知错误');
+                        notif.style.background = 'rgba(239, 68, 68, 0.9)';
+                        setTimeout(() => {
+                            notif.classList.remove('show');
+                        }, 6000);
+                    }
+                }
+            })
+            .catch(err => {
+                if (!silent) {
+                    notif.innerText = '保存失败: ' + err.message;
                     notif.style.background = 'rgba(239, 68, 68, 0.9)';
                     setTimeout(() => {
                         notif.classList.remove('show');
                     }, 6000);
                 }
-            })
-            .catch(err => {
-                notif.innerText = '保存失败: ' + err.message;
-                notif.style.background = 'rgba(239, 68, 68, 0.9)';
-                setTimeout(() => {
-                    notif.classList.remove('show');
-                }, 6000);
             });
         }
 
@@ -1867,6 +1855,14 @@
                 notif.classList.remove('show');
                 if (btn) { btn.disabled = false; btn.innerText = '运行诊断并生成报告结论'; }
                 return;
+            }
+
+            // Auto-save the prompt before executing
+            const promptBox = document.getElementById('llm_custom_prompt');
+            if (promptBox && cat) {
+                window.llmPromptsCache[cat] = promptBox.value;
+                // Silently trigger background save to persist the custom prompt
+                saveConfiguration(true);
             }
             
             let fetchOptions;
