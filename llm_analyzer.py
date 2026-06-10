@@ -85,47 +85,27 @@ class LLMAnalyzer:
 
         try:
             if "gemini" in self.model.lower():
-                import google.generativeai as genai
-                client_options = {'api_endpoint': self.api_base} if self.api_base else None
-                genai.configure(
+                from google import genai
+                from google.genai import types
+                
+                http_options = {'base_url': self.api_base} if self.api_base else None
+                client = genai.Client(
                     api_key=self.api_key or "dummy_key",
-                    transport='rest',
-                    client_options=client_options
+                    http_options=http_options
                 )
-                model = genai.GenerativeModel(
-                    self.model,
-                    system_instruction=system_prompt,
-                    generation_config=genai.GenerationConfig(
+                
+                response = client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
                         temperature=0.2
                     )
                 )
-                response = model.generate_content(prompt)
                 
-                try:
-                    raw_content = response.text
-                except ValueError as e:
-                    if "function_call" in str(e) and response.candidates:
-                        part = response.candidates[0].content.parts[0]
-                        if part.function_call:
-                            import json
-                            args_dict = type(part.function_call.args).to_dict(part.function_call.args) if hasattr(type(part.function_call.args), 'to_dict') else dict(part.function_call.args)
-                            raw_content = json.dumps(args_dict)
-                        else:
-                            raise
-                    else:
-                        raise
-                        
-                if not raw_content.strip():
-                    if response.candidates:
-                        part = response.candidates[0].content.parts[0]
-                        if part.function_call:
-                            import json
-                            args_dict = type(part.function_call.args).to_dict(part.function_call.args) if hasattr(type(part.function_call.args), 'to_dict') else dict(part.function_call.args)
-                            raw_content = json.dumps(args_dict)
-                        else:
-                            raise ValueError(f"大模型返回空文本，中断原因: {response.candidates[0].finish_reason}")
-                    else:
-                        raise ValueError("大模型未返回任何有效 Candidate")
+                raw_content = response.text
+                if not raw_content or not raw_content.strip():
+                    raise ValueError("大模型返回空文本或未包含有效内容")
                         
                 return self._parse_and_validate_json(raw_content, metrics, exceptions)
                 
