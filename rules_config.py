@@ -8,6 +8,7 @@ from typing import Dict, Any, Optional, List
 
 
 import os
+from core_paths import RULES_FILE, FEISHU_CONFIG_FILE, CACHE_DIR, DATA_DIR
 import json
 
 # ==============================================================================
@@ -16,7 +17,7 @@ import json
 VEHICLE_CAPACITY: Dict[str, int] = {}
 METRICS_CONFIG: Dict[str, Dict[str, Any]] = {}
 
-config_path = os.path.join(os.path.dirname(__file__), "config", "rules.json")
+config_path = RULES_FILE
 try:
     with open(config_path, "r", encoding="utf-8") as f:
         _rules_data = json.load(f)

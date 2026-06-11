@@ -3,6 +3,7 @@
 """
 
 import os
+from core_paths import RULES_FILE, FEISHU_CONFIG_FILE, CACHE_DIR, DATA_DIR
 import json
 import logging
 import requests
@@ -26,7 +27,7 @@ class LLMAnalyzer:
         config_model = None
         config_custom_prompt = None
         
-        config_path = os.path.join("config", "feishu_config.json")
+        config_path = FEISHU_CONFIG_FILE
         if os.path.exists(config_path):
             try:
                 with open(config_path, "r", encoding="utf-8") as f:
@@ -129,7 +130,7 @@ class LLMAnalyzer:
         """
         payload_str = json.dumps(payload, sort_keys=True, ensure_ascii=False)
         hash_str = hashlib.md5(payload_str.encode("utf-8")).hexdigest()
-        cache_dir = os.path.join("scratch", "cache")
+        cache_dir = CACHE_DIR
         os.makedirs(cache_dir, exist_ok=True)
         return os.path.join(cache_dir, f"{hash_str}.json")
 

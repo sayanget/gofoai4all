@@ -3,6 +3,7 @@
 """
 
 import os
+from core_paths import RULES_FILE, FEISHU_CONFIG_FILE, CACHE_DIR, DATA_DIR
 import json
 from datetime import datetime
 from rules_checker import RulesChecker
@@ -221,7 +222,7 @@ def run_pipeline(target_category: str = "", file_path: str = None) -> dict:
         raw_data = extractor.extract()
     else:
         try:
-            with open("config/rules.json", "r", encoding="utf-8") as f:
+            with open(RULES_FILE, "r", encoding="utf-8") as f:
                 rules_config = json.load(f)
                 feishu_url = rules_config.get("categories", {}).get(target_category, {}).get("data_source", "")
                 import logging

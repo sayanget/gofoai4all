@@ -1,3 +1,4 @@
+from core_paths import RULES_FILE, FEISHU_CONFIG_FILE, CACHE_DIR, DATA_DIR
 """
 工具2：核心KPI与加时修正计算器 (kpi_calculator.py)
 """
@@ -11,7 +12,7 @@ from tools.tms_extractor import TMSExtractor
 
 # 读取 rules.json 规则配置
 try:
-    with open("config/rules.json", "r", encoding="utf-8") as f:
+    with open(RULES_FILE, "r", encoding="utf-8") as f:
         rules_config = json.load(f)
 except Exception:
     rules_config = {}

@@ -150,3 +150,8 @@
 2026-06-11 13:41:27,027 - FeishuConfigServer - INFO - Daily pipeline completed successfully.
 2026-06-11 13:41:27,031 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 13:41:27] "POST /api/generate_report HTTP/1.1" 200 -
 2026-06-11 13:41:28,068 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 13:41:28] "[36mGET /card_editor.html HTTP/1.1[0m" 304 -
+2026-06-11 14:07:04,816 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:9999
+ * Running on http://10.9.21.17:9999
+2026-06-11 14:07:04,816 - werkzeug - INFO - [33mPress CTRL+C to quit[0m

@@ -3,6 +3,7 @@
 """
 
 import os
+from core_paths import RULES_FILE, FEISHU_CONFIG_FILE, CACHE_DIR, DATA_DIR
 import json
 import logging
 from agents.dispatcher_agent import create_dispatcher_agent
@@ -20,7 +21,7 @@ def run_daily_pipeline():
     dispatcher_agent = create_dispatcher_agent()
     
     try:
-        with open("config/rules.json", "r", encoding="utf-8") as f:
+        with open(RULES_FILE, "r", encoding="utf-8") as f:
             rules_config = json.load(f)
             # 默认取发车准点率的数据源作为全局入口
             feishu_url = rules_config.get("metrics", {}).get("发车准点率", {}).get("data_source", "data/depatcher.xlsx")
@@ -42,7 +43,7 @@ def run_daily_pipeline():
     FEISHU_APP_SECRET = os.getenv("FEISHU_APP_SECRET")
     FEISHU_CHAT_ID = os.getenv("FEISHU_CHAT_ID")
 
-    config_path = os.path.join("config", "feishu_config.json")
+    config_path = FEISHU_CONFIG_FILE
     if os.path.exists(config_path):
         try:
             with open(config_path, "r", encoding="utf-8") as f:

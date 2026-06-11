@@ -3,6 +3,7 @@
 """
 
 import os
+from core_paths import RULES_FILE, FEISHU_CONFIG_FILE, CACHE_DIR, DATA_DIR
 import json
 import pandas as pd
 from datetime import datetime
@@ -71,7 +72,7 @@ class TMSExtractor:
         # 1. 获取凭证
         app_id = os.getenv("FEISHU_APP_ID")
         app_secret = os.getenv("FEISHU_APP_SECRET")
-        config_path = os.path.join("config", "feishu_config.json")
+        config_path = FEISHU_CONFIG_FILE
         if os.path.exists(config_path) and (not app_id or not app_secret):
             with open(config_path, "r", encoding="utf-8") as f:
                 config_data = json.load(f)

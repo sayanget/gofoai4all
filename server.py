@@ -1,4 +1,5 @@
 import os
+from core_paths import RULES_FILE, FEISHU_CONFIG_FILE, CACHE_DIR, DATA_DIR
 import json
 import logging
 from logging.handlers import RotatingFileHandler
@@ -24,8 +25,8 @@ class EndpointFilter(logging.Filter):
 
 logging.getLogger("werkzeug").addFilter(EndpointFilter())
 
-FEISHU_CONFIG_FILE = os.path.join("config", "feishu_config.json")
-RULES_FILE = os.path.join("config", "rules.json")
+FEISHU_CONFIG_FILE = FEISHU_CONFIG_FILE
+RULES_FILE = RULES_FILE
 
 @app.route("/")
 @app.route("/feishu_config.html")
