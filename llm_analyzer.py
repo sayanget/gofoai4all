@@ -244,6 +244,7 @@ class LLMAnalyzer:
 {chr(10).join(formatted_exceptions) if formatted_exceptions else "今日无触发规则异常项，各项指标表现优异。"}
 
 请针对以上规则与数据快照进行深入诊断，并按照以下 JSON Schema 输出分析结果：
+注意：仅对当前输入数据快照中存在的车次（如上列出的异常 ID）进行定责，严禁关联分析数据集之外的历史车次数据（切勿虚构如 MT2026060600651 等未出现的数据）！
 {{
   "status": "success" | "warning" | "danger",  // 整体评估：全达标为 success；仅有通晒指标异常/轻微考核指标未达标为 warning；有核心考核指标严重未达标为 danger
   "title": "报告标题",

@@ -571,6 +571,7 @@
 
             <select
               id="card_status_select"
+              title="报告状态颜色设置"
               onchange="updateCardColor()"
               style="
                 padding: 4px 8px;
@@ -664,36 +665,29 @@
                   "
                 ></div>
               </div>
-
-              <div class="feishu-hr"></div>
-
-              <!-- 动作按钮 -->
-              <div class="feishu-actions">
-                <div class="feishu-btn primary">📥 转为跟进工单</div>
-                <div class="feishu-btn">❓ 申诉/误报反馈</div>
-              </div>
             </div>
-          </div>
 
-          <div style="margin-top: 25px; text-align: center">
-            <button
-              class="btn btn-send pulse"
-              id="btn_send_card"
-              onclick="sendFinalCard()"
-              style="width: 100%; height: 50px; font-size: 1.1em"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
+            <!-- 卡片底部动作区域 -->
+            <div style="margin-top: 20px; text-align: center;">
+              <button
+                class="btn btn-send pulse"
+                id="btn_send_card"
+                onclick="sendFinalCard()"
+                style="width: 100%; height: 50px; font-size: 1.1em"
               >
-                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-              </svg>
-              <span id="send_btn_text">确认无误，正式发送至飞书</span>
-            </button>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                </svg>
+                <span id="send_btn_text">确认无误，正式发送至飞书</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -930,6 +924,8 @@
                                 <td style="padding: 8px 4px; text-align: center;">${m.status}</td>
                                 <td style="padding: 8px 4px; color: #646a73; font-size: 0.8rem;">${m.rule_triggered}</td>
                             </tr>
+                    `;
+          });
           metricsHtml += `
                         </tbody>
                     </table>
@@ -1114,6 +1110,10 @@
         }
         if(document.getElementById("preview_card_summary") && document.getElementById("card_summary")) {
             document.getElementById("preview_card_summary").innerHTML = document.getElementById("card_summary").innerHTML;
+        }
+        
+        if(document.getElementById("preview_card_metrics_list") && document.getElementById("card_metrics_list")) {
+            document.getElementById("preview_card_metrics_list").innerHTML = document.getElementById("card_metrics_list").innerHTML;
         }
         
         if(document.getElementById("preview_card_diagnosis") && document.getElementById("card_diagnosis")) {
