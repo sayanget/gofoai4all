@@ -1,0 +1,89 @@
+2026-06-11 12:04:47,794 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:04:47] "POST /api/clear_logs HTTP/1.1" 200 -
+2026-06-11 12:04:49,467 - FeishuConfigServer - INFO - Successfully saved Feishu credentials to config\feishu_config.json
+2026-06-11 12:04:49,468 - FeishuConfigServer - INFO - Successfully saved KPI metrics to config\rules.json
+2026-06-11 12:04:49,469 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:04:49] "POST /api/save_config HTTP/1.1" 200 -
+2026-06-11 12:04:49,482 - FeishuConfigServer - INFO - Executing real daily pipeline for manual review... target_category: 调度, file_path: None
+2026-06-11 12:04:49,482 - FeishuConfigServer - INFO - Read feishu_url from rules.json: 'https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv' for category '调度'
+2026-06-11 12:04:49,483 - FeishuConfigServer - INFO - TMSExtractor.extract called with data_path=https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv
+2026-06-11 12:04:49,485 - FeishuConfigServer - INFO - Feishu URL detected: https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv, fetching...
+2026-06-11 12:04:53,322 - FeishuConfigServer - INFO - Feishu fetch success, rows: 14147
+2026-06-11 12:04:55,509 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:05:07,423 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:05:07,443 - FeishuConfigServer - INFO - Daily pipeline completed successfully.
+2026-06-11 12:05:07,450 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:05:07] "POST /api/generate_report HTTP/1.1" 200 -
+2026-06-11 12:05:09,148 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:05:09] "[36mGET /card_editor.html HTTP/1.1[0m" 304 -
+2026-06-11 12:08:02,242 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:08:02] "[36mGET /feishu_config.html HTTP/1.1[0m" 304 -
+2026-06-11 12:08:02,477 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:08:02] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 12:08:03,658 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:08:03] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 12:08:04,740 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:08:04] "POST /api/verify_url HTTP/1.1" 200 -
+2026-06-11 12:08:18,064 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:08:18] "[36mGET /card_editor.html HTTP/1.1[0m" 304 -
+2026-06-11 12:08:49,304 - FeishuConfigServer - INFO - Executing AI iteration with feedback: 每次显示删选数据的条数方便鉴别是否读取正确的数据量
+2026-06-11 12:08:50,438 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:08:57,942 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:08:57,946 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:08:57] "POST /api/iterate_report HTTP/1.1" 200 -
+2026-06-11 12:11:06,163 - FeishuConfigServer - INFO - Executing AI iteration with feedback: 表里只有18条对应数据
+2026-06-11 12:11:07,294 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:11:14,187 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:11:14,190 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:11:14] "POST /api/iterate_report HTTP/1.1" 200 -
+2026-06-11 12:12:25,566 - FeishuConfigServer - INFO - Executing AI iteration with feedback: 表里只有18条对应数据，重新筛选分析
+2026-06-11 12:12:26,606 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:12:33,770 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:12:33,777 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:12:33] "POST /api/iterate_report HTTP/1.1" 200 -
+2026-06-11 12:13:49,534 - FeishuConfigServer - INFO - Executing AI iteration with feedback: MT2026060600651、MT2026060300635 这两趟车的出发地是哪里？
+2026-06-11 12:13:50,548 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:13:57,832 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:13:57,836 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:13:57] "POST /api/iterate_report HTTP/1.1" 200 -
+2026-06-11 12:16:19,057 - FeishuConfigServer - INFO - Executing AI iteration with feedback: 仅筛选车辆出发地是CNO.H的数据进行分析
+2026-06-11 12:16:20,112 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:16:27,625 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:16:27,629 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:16:27] "POST /api/iterate_report HTTP/1.1" 200 -
+2026-06-11 12:17:33,718 - FeishuConfigServer - INFO - Executing AI iteration with feedback: 列出所有6月CNO.H始发班次数据
+2026-06-11 12:17:34,833 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:17:42,147 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:17:42,151 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:17:42] "POST /api/iterate_report HTTP/1.1" 200 -
+2026-06-11 12:18:18,769 - FeishuConfigServer - INFO - Executing AI iteration with feedback: MT2026060600651这个车辆出发地是哪里
+2026-06-11 12:18:19,824 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:18:27,179 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:18:27,183 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:18:27] "POST /api/iterate_report HTTP/1.1" 200 -
+2026-06-11 12:26:20,041 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:26:20] "[36mGET /feishu_config.html HTTP/1.1[0m" 304 -
+2026-06-11 12:26:20,345 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:26:20] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 12:26:22,403 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:26:22] "POST /api/verify_url HTTP/1.1" 200 -
+2026-06-11 12:26:23,493 - FeishuConfigServer - INFO - Successfully saved Feishu credentials to config\feishu_config.json
+2026-06-11 12:26:23,495 - FeishuConfigServer - INFO - Successfully saved KPI metrics to config\rules.json
+2026-06-11 12:26:23,495 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:26:23] "POST /api/save_config HTTP/1.1" 200 -
+2026-06-11 12:26:23,503 - FeishuConfigServer - INFO - Executing real daily pipeline for manual review... target_category: 调度, file_path: None
+2026-06-11 12:26:23,504 - FeishuConfigServer - INFO - Read feishu_url from rules.json: 'https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv' for category '调度'
+2026-06-11 12:26:23,504 - FeishuConfigServer - INFO - TMSExtractor.extract called with data_path=https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv
+2026-06-11 12:26:23,504 - FeishuConfigServer - INFO - Feishu URL detected: https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv, fetching...
+2026-06-11 12:26:26,666 - FeishuConfigServer - INFO - Feishu fetch success, rows: 14147
+2026-06-11 12:26:28,412 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:26:42,255 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:26:42,268 - FeishuConfigServer - INFO - Daily pipeline completed successfully.
+2026-06-11 12:26:42,275 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:26:42] "POST /api/generate_report HTTP/1.1" 200 -
+2026-06-11 12:26:43,310 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:26:43] "[36mGET /card_editor.html HTTP/1.1[0m" 304 -
+2026-06-11 12:27:51,680 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:9999
+ * Running on http://10.9.21.17:9999
+2026-06-11 12:27:51,681 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-06-11 12:30:30,002 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:9999
+ * Running on http://10.9.21.17:9999
+2026-06-11 12:30:30,002 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-06-11 12:32:27,520 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:32:27] "[36mGET /feishu_config.html HTTP/1.1[0m" 304 -
+2026-06-11 12:32:27,824 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:32:27] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 12:32:30,407 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:32:30] "POST /api/verify_url HTTP/1.1" 200 -
+2026-06-11 12:32:30,698 - FeishuConfigServer - INFO - Successfully saved Feishu credentials to config\feishu_config.json
+2026-06-11 12:32:30,699 - FeishuConfigServer - INFO - Successfully saved KPI metrics to config\rules.json
+2026-06-11 12:32:30,699 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:32:30] "POST /api/save_config HTTP/1.1" 200 -
+2026-06-11 12:32:30,709 - FeishuConfigServer - INFO - Executing real daily pipeline for manual review... target_category: 调度, file_path: None
+2026-06-11 12:32:30,710 - FeishuConfigServer - INFO - Read feishu_url from rules.json: 'https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv' for category '调度'
+2026-06-11 12:32:31,293 - FeishuConfigServer - INFO - TMSExtractor.extract called with data_path=https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv
+2026-06-11 12:32:31,293 - FeishuConfigServer - INFO - Feishu URL detected: https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv, fetching...
+2026-06-11 12:32:34,445 - FeishuConfigServer - INFO - Feishu fetch success, rows: 14147
+2026-06-11 12:32:40,068 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 12:32:52,248 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 12:32:52,253 - FeishuConfigServer - INFO - Daily pipeline completed successfully.
+2026-06-11 12:32:52,254 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:32:52] "POST /api/generate_report HTTP/1.1" 200 -
+2026-06-11 12:32:54,149 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 12:32:54] "[36mGET /card_editor.html HTTP/1.1[0m" 304 -

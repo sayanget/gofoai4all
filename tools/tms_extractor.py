@@ -20,20 +20,22 @@ class TMSExtractor:
         加载数据源。如果文件存在则使用 Pandas 读取；
         如果不存在或格式有误，自动降级为完备的 Mock 数据，以确保 Pipeline 的稳健运行。
         """
-        print(f"[DEBUG] TMSExtractor.extract called with data_path={self.data_path}")
+        import logging
+        logger = logging.getLogger("FeishuConfigServer")
+        logger.info(f"TMSExtractor.extract called with data_path={self.data_path}")
         try:
             # 优先检查是否是网络链接（飞书表格）
-            if self.data_path.startswith('http') and 'feishu.cn/sheets/' in self.data_path:
-                print(f"[TMSExtractor] Feishu URL detected: {self.data_path}, fetching...")
+            if self.data_path.startswith('http') and ('feishu.cn/sheets/' in self.data_path or 'feishu.cn/wiki/' in self.data_path):
+                logger.info(f"Feishu URL detected: {self.data_path}, fetching...")
                 try:
                     df = self.fetch_feishu_sheet(self.data_path)
-                    print(f"[TMSExtractor] Feishu fetch success, rows: {len(df)}")
+                    logger.info(f"Feishu fetch success, rows: {len(df)}")
                     return self._map_feishu_data(df.to_dict(orient="records"))
                 except Exception as e:
-                    print(f"[TMSExtractor] Feishu fetch failed: {e}, fallback to mock")
+                    logger.error(f"Feishu fetch failed: {e}")
                     import traceback
-                    traceback.print_exc()
-                    return self._get_fallback_mock_data()
+                    logger.error(traceback.format_exc())
+                    raise ValueError(f"数据源读取失败: {str(e)}")
 
             # 本地文件读取逻辑
             if not os.path.exists(self.data_path):
@@ -55,7 +57,11 @@ class TMSExtractor:
                 return {"raw_records": df.to_dict(orient="records")}
             else:
                 return self._get_fallback_mock_data()
-        except Exception:
+        except ValueError as ve:
+            # Propagate the explicit data source error
+            raise ve
+        except Exception as e:
+            logger.error(f"Unknown error in extract: {e}")
             return self._get_fallback_mock_data()
 
     def fetch_feishu_sheet(self, url: str) -> pd.DataFrame:
@@ -76,11 +82,17 @@ class TMSExtractor:
             raise ValueError("未配置 FEISHU_APP_ID 或 FEISHU_APP_SECRET，无法拉取飞书表格。")
             
         # 2. 解析 URL 获取 token 和 sheet_id
-        # 比如 https://domain.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=307Usp
-        match = re.search(r'/sheets/([a-zA-Z0-9_]+)', url)
-        if not match:
-            raise ValueError("无效的飞书表格链接，无法提取 spreadsheetToken。")
-        spreadsheet_token = match.group(1)
+        is_wiki = False
+        match_sheet = re.search(r'/sheets/([a-zA-Z0-9_]+)', url)
+        match_wiki = re.search(r'/wiki/([a-zA-Z0-9_]+)', url)
+        
+        if match_sheet:
+            spreadsheet_token = match_sheet.group(1)
+        elif match_wiki:
+            spreadsheet_token = match_wiki.group(1)  # 暂时保存 wiki token
+            is_wiki = True
+        else:
+            raise ValueError("无效的飞书表格链接，无法提取 spreadsheetToken 或 wikiToken。")
         
         sheet_id = ""
         if "sheet=" in url:
@@ -96,10 +108,23 @@ class TMSExtractor:
         if not tenant_access_token:
             raise ValueError("获取飞书 API Token 失败。")
 
-        # 4. 获取表格数据
         headers = {
             "Authorization": f"Bearer {tenant_access_token}"
         }
+
+        # 如果是 wiki 链接，需要先通过 wiki token 获取底层的 obj_token (即真实的 sheet token)
+        if is_wiki:
+            wiki_url = f"https://open.feishu.cn/open-apis/wiki/v2/spaces/get_node?token={spreadsheet_token}"
+            wiki_res = requests.get(wiki_url, headers=headers, timeout=10)
+            wiki_res.raise_for_status()
+            wiki_data = wiki_res.json()
+            if wiki_data.get("code") != 0:
+                raise ValueError(f"飞书 Wiki API 报错: {wiki_data.get('msg')}")
+            
+            # 替换为真实的 spreadsheet_token
+            spreadsheet_token = wiki_data.get("data", {}).get("node", {}).get("obj_token")
+            if not spreadsheet_token:
+                raise ValueError("无法从 Wiki 节点中解析出底层的表格 Token。")
         # 使用读取单个工作表的接口
         sheet_url = f"https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/{spreadsheet_token}/values/{sheet_id}"
         sheet_res = requests.get(sheet_url, headers=headers, timeout=10)
@@ -159,6 +184,11 @@ class TMSExtractor:
             plan_arr = excel_to_dt(row.get("计划到车时间(本地时区)"))
             act_arr = excel_to_dt(row.get("实际到车时间(本地时区)"))
             route = row.get("发车路段", "")
+            departure_loc = row.get("车辆出发地", "")
+            
+            # 根据用户要求，精确过滤车辆出发地为 CNO.H 的数据
+            if departure_loc != "CNO.H":
+                continue
             
             # 只有当包含有效 trip_id 时才加入 (过滤掉空行)
             if str(trip_id).strip() and str(trip_id).strip() != "Unknown":

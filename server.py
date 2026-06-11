@@ -1,14 +1,28 @@
 import os
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, request, jsonify, send_file
 from feishu.card_sender import send_feishu_card
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+os.makedirs("logs", exist_ok=True)
+log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=5*1024*1024, backupCount=2, encoding='utf-8')
+file_handler.setFormatter(log_formatter)
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+
+logging.basicConfig(level=logging.INFO, handlers=[file_handler, console_handler])
 logger = logging.getLogger("FeishuConfigServer")
 
 app = Flask(__name__, static_folder='.', static_url_path='')
+
+class EndpointFilter(logging.Filter):
+    def filter(self, record):
+        return '/api/logs' not in record.getMessage()
+
+logging.getLogger("werkzeug").addFilter(EndpointFilter())
 
 FEISHU_CONFIG_FILE = os.path.join("config", "feishu_config.json")
 RULES_FILE = os.path.join("config", "rules.json")
@@ -17,6 +31,37 @@ RULES_FILE = os.path.join("config", "rules.json")
 @app.route("/feishu_config.html")
 def index():
     return send_file("feishu_config.html")
+
+@app.route("/view_logs.html")
+def view_logs_page():
+    return send_file("view_logs.html")
+
+@app.route("/api/logs", methods=["GET"])
+def get_logs():
+    try:
+        log_path = 'logs/app.log'
+        if not os.path.exists(log_path):
+            return jsonify({"success": True, "logs": "等待日志生成..."})
+        
+        with open(log_path, 'r', encoding='utf-8') as f:
+            # Read last 500 lines
+            lines = f.readlines()
+            last_lines = lines[-500:]
+            return jsonify({"success": True, "logs": "".join(last_lines)})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route("/api/clear_logs", methods=["POST"])
+def clear_logs():
+    try:
+        log_path = 'logs/app.log'
+        if os.path.exists(log_path):
+            # Truncate the file
+            with open(log_path, 'w', encoding='utf-8') as f:
+                f.write("")
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 @app.route("/card_editor")
 @app.route("/card_editor.html")
@@ -395,11 +440,30 @@ def extract_rules():
                     else:
                         image_mime = "image/jpeg"
                 else:
-                    # Treat as text file
-                    try:
-                        text_content = file_bytes.decode("utf-8")
-                    except Exception:
-                        text_content = file_bytes.decode("gbk", errors="ignore")
+                    if filename.endswith(".csv"):
+                        import pandas as pd
+                        import io
+                        try:
+                            df = pd.read_csv(io.BytesIO(file_bytes))
+                            text_content = df.to_csv(index=False)
+                        except Exception as e:
+                            logger.error(f"Error parsing CSV: {e}")
+                            text_content = file_bytes.decode("utf-8", errors="ignore")
+                    elif filename.endswith(".xlsx") or filename.endswith(".xls"):
+                        import pandas as pd
+                        import io
+                        try:
+                            df = pd.read_excel(io.BytesIO(file_bytes))
+                            text_content = df.to_csv(index=False)
+                        except Exception as e:
+                            logger.error(f"Error parsing Excel: {e}")
+                            text_content = ""
+                    else:
+                        # Treat as text file
+                        try:
+                            text_content = file_bytes.decode("utf-8")
+                        except Exception:
+                            text_content = file_bytes.decode("gbk", errors="ignore")
 
         # Try to read url or text from form/json
         url = ""
@@ -582,7 +646,7 @@ def extract_rules():
             except Exception as e:
                 logger.error(f"Error calling LLM for rule extraction: {e}")
                 using_mock = True
-                error_detail = str(e)
+                error_detail = f"{str(e)} (evaluated model: {model})"
         else:
             using_mock = True
 
@@ -674,6 +738,11 @@ def generate_report():
         logger.info("Daily pipeline completed successfully.")
         return jsonify({"success": True, "report": agent_output})
     except Exception as e:
+        error_msg = str(e)
+        if "数据源读取失败" in error_msg:
+            logger.error(f"Data source read failed: {error_msg}")
+            return jsonify({"success": False, "error": error_msg})
+            
         logger.error(f"Failed to execute real pipeline: {e}. Using baseline mockup report.")
         from datetime import date
         today_str = date.today().strftime("%Y-%m-%d")
@@ -697,6 +766,62 @@ def generate_report():
             ]
         }
         return jsonify({"success": True, "report": fallback_output, "warning": str(e)})
+
+@app.route("/api/iterate_report", methods=["POST"])
+def iterate_report():
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        current_report = data.get("current_report")
+        user_feedback = data.get("user_feedback")
+        
+        if not current_report or not user_feedback:
+            return jsonify({"success": False, "error": "Missing current_report or user_feedback"}), 400
+            
+        from llm_analyzer import LLMAnalyzer
+        analyzer = LLMAnalyzer()
+        logger.info(f"Executing AI iteration with feedback: {user_feedback}")
+        
+        new_report = analyzer.iterate(current_report, user_feedback)
+        return jsonify({"success": True, "report": new_report})
+    except Exception as e:
+        logger.error(f"Failed to iterate report: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/upgrade_rule", methods=["POST"])
+def upgrade_rule():
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        target_category = data.get("target_category")
+        user_feedback = data.get("user_feedback")
+        
+        if not target_category or not user_feedback:
+            return jsonify({"success": False, "error": "Missing target_category or user_feedback"}), 400
+            
+        feishu_config = {}
+        if os.path.exists(FEISHU_CONFIG_FILE):
+            with open(FEISHU_CONFIG_FILE, "r", encoding="utf-8") as f:
+                feishu_config = json.load(f)
+                
+        prompts = feishu_config.get("llm_custom_prompts", {})
+        existing_prompt = prompts.get(target_category, "")
+        
+        # Append the new rule
+        if existing_prompt:
+            new_prompt = existing_prompt + f"\n\n【附加诊断规则】\n{user_feedback}"
+        else:
+            new_prompt = f"你是一个精通“跨境物流”的资深分析专家。请针对【{target_category}】环节，根据提供的时效数据和异常信息，输出专业的定责考核报告。\n\n【附加诊断规则】\n{user_feedback}"
+            
+        prompts[target_category] = new_prompt
+        feishu_config["llm_custom_prompts"] = prompts
+        
+        with open(FEISHU_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(feishu_config, f, indent=2, ensure_ascii=False)
+            
+        logger.info(f"Successfully upgraded rule for {target_category} with feedback: {user_feedback}")
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Failed to upgrade rule: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route("/api/send_edited_card", methods=["POST"])
 def send_edited_card():

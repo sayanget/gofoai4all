@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统运行日志</title>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+        }
+        #log-container {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 15px;
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        h1 {
+            color: #58a6ff;
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background-color: #238636;
+            color: #ffffff;
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 6px;
+            padding: 5px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+        }
+        button:hover {
+            background-color: #2ea043;
+        }
+        .error-log {
+            color: #f85149;
+            font-weight: bold;
+        }
+        .warning-log {
+            color: #d29922;
+        }
+        .info-log {
+            color: #58a6ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <span>Antigravity 系统运行日志 (实时监控)</span>
+        <div class="controls">
+            <button onclick="clearLogs()" style="background-color: #da3633;">清屏</button>
+            <button onclick="fetchLogs()">手动刷新</button>
+            <button id="auto-scroll-btn" onclick="toggleAutoScroll()" style="background-color: #1f6feb;">自动滚动: 开</button>
+        </div>
+    </h1>
+    <div id="log-container">加载中...</div>
+
+    <script>
+        let autoScroll = true;
+        const container = document.getElementById('log-container');
+        const scrollBtn = document.getElementById('auto-scroll-btn');
+
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            scrollBtn.innerText = `自动滚动: ${autoScroll ? '开' : '关'}`;
+            scrollBtn.style.backgroundColor = autoScroll ? '#1f6feb' : '#30363d';
+        }
+
+        function highlightLogs(text) {
+            return text
+                .replace(/ERROR/g, '<span class="error-log">ERROR</span>')
+                .replace(/WARNING/g, '<span class="warning-log">WARNING</span>')
+                .replace(/INFO/g, '<span class="info-log">INFO</span>');
+        }
+
+        let lastLogs = "";
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                if (data.success) {
+                    if (data.logs !== lastLogs) {
+                        lastLogs = data.logs;
+                        container.innerHTML = highlightLogs(data.logs);
+                        if (autoScroll) {
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    }
+                } else {
+                    container.innerHTML = `<span class="error-log">无法获取日志: ${data.error}</span>`;
+                }
+            } catch (err) {
+                container.innerHTML = `<span class="error-log">请求失败: ${err.message}</span>`;
+            }
+        }
+
+        async function clearLogs() {
+            try {
+                const response = await fetch('/api/clear_logs', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    lastLogs = "";
+                    container.innerHTML = '';
+                } else {
+                    alert("清屏失败: " + data.error);
+                }
+            } catch (err) {
+                alert("请求清屏失败: " + err.message);
+            }
+        }
+
+        // 初始加载
+        fetchLogs();
+        
+        // 每 2 秒自动刷新
+        setInterval(fetchLogs, 2000);
+
+        // 如果用户手动滚动，则暂停自动滚动
+        container.addEventListener('wheel', () => {
+            if (autoScroll) toggleAutoScroll();
+        });
+    </script>
+</body>
+</html>

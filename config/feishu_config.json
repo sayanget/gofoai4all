@@ -4,10 +4,12 @@
   "app_id": "cli_a9fc1c1c0bb8dbcb",
   "app_secret": "XeStEZgDlQQUnUU93w1d3emYSdMSfiq6",
   "chat_id": "oc_9deed7667aec86791fc93583b28ae2c6",
-  "llm_api_key": "sk-31d9d6efb7664d7eaa6ef50cf516e198",
-  "llm_api_base": "http://127.0.0.1:8045",
-  "llm_model": "gemini-3.5-flash-extra-low",
+  "llm_api_key": "",
+  "llm_api_base": "http://127.0.0.1:8085",
+  "llm_model": "gemini-3.5-flash",
   "llm_custom_prompts": {
+    "HUB": "你是一个精通“美国接收国内电商尾程业务”的资深跨境物流调度专家。请根据提供的美国本地化时效数据和异常信息，输出专业的定责考核报告。",
+    "调度": "你是一个精通“跨境干线与卡车调度”的资深物流专家。请根据提供的时效数据和异常明细，重点关注承运商发车准点率、卸车及时率及截单时间，输出专业的定责考核报告。目前筛选月是6月，车辆出发地是CNO.H的数据进行分析。",
     "默认分类": "你是一个专注中美跨境供应链的数据分析师。请极度详细地剖析美国尾程网络的每一个异常，推测可能的根因（如卡车资源短缺、仓库爆仓、天气因素、司机工时限制ELD等），给出多维度的改善行动建议。筛选月是6月，车辆出发地是CNO.H的数据进行分析。"
   }
 }

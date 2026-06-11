@@ -224,7 +224,11 @@ def run_pipeline(target_category: str = "", file_path: str = None) -> dict:
             with open("config/rules.json", "r", encoding="utf-8") as f:
                 rules_config = json.load(f)
                 feishu_url = rules_config.get("categories", {}).get(target_category, {}).get("data_source", "")
-        except Exception:
+                import logging
+                logging.getLogger("FeishuConfigServer").info(f"Read feishu_url from rules.json: '{feishu_url}' for category '{target_category}'")
+        except Exception as e:
+            import logging
+            logging.getLogger("FeishuConfigServer").error(f"Error reading rules.json: {e}")
             feishu_url = ""
 
         if feishu_url and feishu_url.startswith("http") and "feishu.cn" in feishu_url:
@@ -232,6 +236,8 @@ def run_pipeline(target_category: str = "", file_path: str = None) -> dict:
             extractor = TMSExtractor(feishu_url)
             raw_data = extractor.extract()
         else:
+            import logging
+            logging.getLogger("FeishuConfigServer").info(f"No valid feishu_url found. Falling back to mock data.")
             raw_data = get_mock_daily_data()
             
     checker = RulesChecker(raw_data)

@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 title Antigravity Workflow Core - 一键启动面板
 color 0b
@@ -29,7 +29,9 @@ goto menu
 
 :start_server
 echo.
-echo 正在启动本地 Flask 服务器 (端口 9999)...
+echo 正在清理旧的 server.py 进程...
+wmic process where "CommandLine like '%%server.py%%' and Name='python.exe'" call terminate >nul 2>&1
+echo 正在启动服务 (端口 9999)...
 start "Antigravity Flask Server" cmd /k "python server.py"
 echo 等待服务启动并自动打开浏览器...
 timeout /t 3 >nul

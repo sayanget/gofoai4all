@@ -166,7 +166,8 @@
       .container {
         display: flex;
         justify-content: center;
-        max-width: 800px;
+        max-width: 1600px;
+        width: 95%;
         margin: 0 auto;
         padding: 20px;
         gap: 40px;
@@ -177,6 +178,8 @@
         display: flex;
         flex-direction: column;
         gap: 20px;
+        flex: 1;
+        width: 50%;
       }
 
       .glass-panel {
@@ -491,6 +494,11 @@
           box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
         }
       }
+
+      @keyframes spin-effect {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     </style>
   </head>
   <body>
@@ -688,6 +696,37 @@
             </button>
           </div>
         </div>
+
+        <!-- AI 交互迭代窗口 -->
+        <div class="glass-panel" style="margin-top: 20px;">
+          <div class="panel-header">
+            <h2>
+              <svg viewBox="0 0 24 24" stroke="var(--accent-orange)" fill="none" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              与 AI 对话，迭代报告
+            </h2>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <textarea id="ai_feedback_input" placeholder="如果不满意当前的报告，可以告诉 AI 怎么修改。例如：'弱化发车晚点问题，强调卸车延误，并把建议改得更具体些'" style="flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-family: inherit; resize: vertical; min-height: 80px;"></textarea>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-primary" id="btn_ai_iterate" onclick="iterateWithAI()" style="width: auto; height: 36px; padding: 0 20px; white-space: nowrap;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
+                </svg>
+                重新生成
+              </button>
+              <button class="btn" id="btn_upgrade_rule" onclick="upgradeRule()" style="width: auto; height: 36px; padding: 0 20px; white-space: nowrap; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                保存迭代规则
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 右侧：飞书卡片动态效果预览 (Live Preview) -->
@@ -710,10 +749,10 @@
             </h2>
           </div>
 
-          <div class="feishu-card" id="feishu_card_element">
+          <div class="feishu-card" id="preview_feishu_card_element">
             <!-- 卡片顶部 -->
-            <div class="feishu-header red" id="card_header">
-              物流调度部运营分析与 AI 定责考核报告 (2026-06-08)
+            <div class="feishu-header red" id="preview_card_header">
+              物流调度部运营分析与 AI 定责考核报告
             </div>
 
             <!-- 卡片内容 -->
@@ -721,7 +760,7 @@
               <!-- 总结 -->
               <div
                 class="feishu-div-text"
-                id="card_summary"
+                id="preview_card_summary"
                 style="font-weight: 500"
               >
                 📢 <b>运营快报：</b><br />
@@ -732,9 +771,9 @@
               <div class="feishu-hr"></div>
 
               <!-- 字段块 -->
-              <div class="feishu-fields-box error-border" id="card_metrics_box">
+              <div class="feishu-fields-box error-border" id="preview_card_metrics_box">
                 <div class="feishu-field-title">📊 指标快览：</div>
-                <div id="card_metrics_list">
+                <div id="preview_card_metrics_list">
                   <div
                     class="feishu-field-row"
                     style="color: var(--text-secondary); font-style: italic"
@@ -747,11 +786,19 @@
               <div class="feishu-hr"></div>
 
               <!-- AI 诊断 -->
-              <div class="feishu-note-box" id="card_note">
+              <div class="feishu-note-box">
                 🔍 <b>AI 专家诊断方案：</b><br />
-                <span style="color: var(--text-secondary); font-style: italic"
-                  >(生成诊断后在此处显示详细定责与追溯信息)</span
+                <div
+                  id="preview_card_diagnosis"
+                  style="margin-top: 5px; min-height: 40px"
                 >
+                  <span style="color: var(--text-secondary); font-style: italic">(生成诊断后在此处显示详细定责与追溯信息)</span>
+                </div>
+                <div style="margin-top: 10px">✅ <b>行动建议：</b><br /></div>
+                <div
+                  id="preview_card_suggestions"
+                  style="margin-top: 5px; min-height: 40px"
+                ></div>
               </div>
 
               <div class="feishu-hr"></div>
@@ -809,18 +856,28 @@
         const status = document.getElementById("card_status_select").value;
         const header = document.getElementById("card_header");
         const metricsBox = document.getElementById("card_metrics_box");
+        
+        const previewHeader = document.getElementById("preview_card_header");
+        const previewMetricsBox = document.getElementById("preview_card_metrics_box");
 
         header.className = "feishu-header";
+        if (previewHeader) previewHeader.className = "feishu-header";
+        
         if (status === "danger") {
           header.classList.add("red");
-          if (metricsBox)
-            metricsBox.className = "feishu-fields-box error-border";
+          if (metricsBox) metricsBox.className = "feishu-fields-box error-border";
+          if (previewHeader) previewHeader.classList.add("red");
+          if (previewMetricsBox) previewMetricsBox.className = "feishu-fields-box error-border";
         } else if (status === "warning") {
           header.classList.add("orange");
           if (metricsBox) metricsBox.className = "feishu-fields-box";
+          if (previewHeader) previewHeader.classList.add("orange");
+          if (previewMetricsBox) previewMetricsBox.className = "feishu-fields-box";
         } else {
           header.classList.add("blue");
           if (metricsBox) metricsBox.className = "feishu-fields-box";
+          if (previewHeader) previewHeader.classList.add("blue");
+          if (previewMetricsBox) previewMetricsBox.className = "feishu-fields-box";
         }
       }
 
@@ -840,12 +897,17 @@
           .map((d) => (d.type ? `[${d.type}] ` : "") + d.content)
           .join("\n");
         document.getElementById("card_diagnosis").innerText = diagText;
+        const previewDiag = document.getElementById("preview_card_diagnosis");
+        if(previewDiag) previewDiag.innerText = diagText;
 
         const sugText = (report.action_suggestions || []).join("\n");
         document.getElementById("card_suggestions").innerText = sugText;
+        const previewSug = document.getElementById("preview_card_suggestions");
+        if(previewSug) previewSug.innerText = sugText;
 
         // 动态绘制指标
         const metricsList = document.getElementById("card_metrics_list");
+        const previewMetricsList = document.getElementById("preview_card_metrics_list");
         if (report.metrics_display) {
           let metricsHtml = `
                     <table style="width:100%; border-collapse: collapse; text-align: left; font-size: 13px; margin-top: 8px;">
@@ -868,14 +930,15 @@
                                 <td style="padding: 8px 4px; text-align: center;">${m.status}</td>
                                 <td style="padding: 8px 4px; color: #646a73; font-size: 0.8rem;">${m.rule_triggered}</td>
                             </tr>
-                    `;
-          });
           metricsHtml += `
                         </tbody>
                     </table>
                 `;
           metricsList.innerHTML = metricsHtml;
         }
+
+        // Sync left side changes to the right side live preview
+        syncToPreview();
       }
 
       function sendFinalCard() {
@@ -954,6 +1017,124 @@
               "确认无误，正式发送至飞书";
           });
       }
+    
+      function iterateWithAI() {
+        const feedback = document.getElementById("ai_feedback_input").value;
+        if (!feedback.trim()) {
+            showNotification("请输入您对报告的修改意见！", "warning");
+            return;
+        }
+        
+        if (!lastGeneratedReport) {
+            showNotification("当前没有可用的原始报告数据，无法迭代！", "error");
+            return;
+        }
+
+        const btn = document.getElementById("btn_ai_iterate");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<svg viewBox="0 0 50 50" style="width:20px;height:20px;margin-bottom:5px;display:block;margin:0 auto 5px;"><circle cx="25" cy="25" r="20" fill="none" stroke-width="5" stroke="currentColor" stroke-dasharray="31.4 31.4" stroke-dashoffset="0" style="animation: spin-effect 1s linear infinite;"></circle></svg>思考中...`;
+        btn.disabled = true;
+        
+        fetch("/api/iterate_report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                current_report: lastGeneratedReport,
+                user_feedback: feedback
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            if (data.success) {
+                showNotification("报告已根据您的意见重新生成！", "success");
+                lastGeneratedReport = data.report;
+                localStorage.setItem("lastGeneratedReport", JSON.stringify(data.report));
+                renderLivePreview(data.report);
+                syncToPreview();
+                document.getElementById("ai_feedback_input").value = "";
+            } else {
+                showNotification("重新生成失败: " + data.error, "error");
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showNotification("网络请求失败: " + err.message, "error");
+        });
+      }
+
+      function upgradeRule() {
+        const feedback = document.getElementById("ai_feedback_input").value;
+        if (!feedback.trim()) {
+            showNotification("请输入想要沉淀为长期规则的反馈意见！", "warning");
+            return;
+        }
+
+        const targetCategory = localStorage.getItem("lastTargetCategory");
+        if (!targetCategory) {
+            showNotification("找不到当前的报告分类，无法保存规则！请返回首页重新生成一次报告。", "error");
+            return;
+        }
+
+        const btn = document.getElementById("btn_upgrade_rule");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<svg viewBox="0 0 50 50" style="width:16px;height:16px;margin-right:5px;vertical-align:middle;display:inline-block;"><circle cx="25" cy="25" r="20" fill="none" stroke-width="5" stroke="currentColor" stroke-dasharray="31.4 31.4" stroke-dashoffset="0" style="animation: spin-effect 1s linear infinite;"></circle></svg>保存中...`;
+        btn.disabled = true;
+
+        fetch("/api/upgrade_rule", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                target_category: targetCategory,
+                user_feedback: feedback
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            if (data.success) {
+                showNotification(`规则已成功升级并保存到【${targetCategory}】类目下！`, "success");
+            } else {
+                showNotification("保存规则失败: " + data.error, "error");
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showNotification("网络请求失败: " + err.message, "error");
+        });
+      }
+
+      function syncToPreview() {
+        if(document.getElementById("preview_card_header") && document.getElementById("card_header")) {
+            document.getElementById("preview_card_header").innerText = document.getElementById("card_header").innerText;
+        }
+        if(document.getElementById("preview_card_summary") && document.getElementById("card_summary")) {
+            document.getElementById("preview_card_summary").innerHTML = document.getElementById("card_summary").innerHTML;
+        }
+        
+        if(document.getElementById("preview_card_diagnosis") && document.getElementById("card_diagnosis")) {
+            document.getElementById("preview_card_diagnosis").innerHTML = document.getElementById("card_diagnosis").innerHTML;
+        }
+        if(document.getElementById("preview_card_suggestions") && document.getElementById("card_suggestions")) {
+            document.getElementById("preview_card_suggestions").innerHTML = document.getElementById("card_suggestions").innerHTML;
+        }
+      }
+
+      // Add event listeners to contenteditable elements
+      window.addEventListener("DOMContentLoaded", () => {
+        const editables = ["card_header", "card_summary", "card_diagnosis", "card_suggestions"];
+        editables.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('input', syncToPreview);
+          }
+        });
+      });
+
     </script>
   </body>
 </html>

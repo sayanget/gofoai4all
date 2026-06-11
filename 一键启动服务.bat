@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 title Antigravity Web Config Server
 color 0a
@@ -7,6 +7,8 @@ echo ========================================================
 echo        Antigravity 飞书集成与配置中心服务
 echo ========================================================
 echo.
+echo 正在清理旧的 server.py 进程...
+wmic process where "CommandLine like '%%server.py%%' and Name='python.exe'" call terminate >nul 2>&1
 echo 正在启动服务 (端口 9999)...
 
 start "Flask Server" cmd /k "python server.py"

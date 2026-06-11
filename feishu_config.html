@@ -1055,9 +1055,9 @@
 
                     <!-- 文件上传/拖拽区域 -->
                     <div class="form-group" style="margin-bottom: 20px;">
-                        <label>图片或文档文件 (支持 PNG, JPG, WEBP, TXT, MD)</label>
+                        <label>图片、文档或表格文件 (支持 PNG, JPG, WEBP, TXT, MD, CSV, XLSX)</label>
                         <div id="extractor_drop_zone" style="border: 2px dashed rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 30px; text-align: center; background: rgba(0, 0, 0, 0.25); cursor: pointer; transition: all 0.3s ease; position: relative;">
-                            <input type="file" id="extractor_file_input" accept="image/*,.txt,.md" style="display: none;" onchange="handleExtractorFileSelect()">
+                            <input type="file" id="extractor_file_input" accept="image/*,.txt,.md,.csv,.xlsx,.xls" style="display: none;" onchange="handleExtractorFileSelect()">
                             <svg viewBox="0 0 24 24" width="36" height="36" stroke="var(--accent-cyan)" fill="none" stroke-width="2" style="margin-bottom: 12px; display: inline-block;">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                             </svg>
@@ -1777,7 +1777,7 @@
                 notif.classList.add('show');
             }
 
-            fetch('/api/save_config', {
+            return fetch('/api/save_config', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -1875,7 +1875,7 @@
             });
         }
 
-        function generateAndOpenEditor(file = null) {
+        async function generateAndOpenEditor(file = null) {
             const notif = document.getElementById('notif');
             notif.innerText = '正在运行诊断，提取指标数据并调用 AI 专家生成报告草稿...';
             notif.style.background = 'rgba(59, 130, 246, 0.9)';
@@ -1899,8 +1899,12 @@
             const promptBox = document.getElementById('llm_custom_prompt');
             if (promptBox && cat) {
                 window.llmPromptsCache[cat] = promptBox.value;
-                // Silently trigger background save to persist the custom prompt
-                saveConfiguration(true);
+                // Await the background save to prevent race condition with /api/generate_report
+                try {
+                    await saveConfiguration(true);
+                } catch (e) {
+                    console.error("Auto-save failed before generating report:", e);
+                }
             }
             
             let fetchOptions;
@@ -1926,6 +1930,7 @@
                 if (data.success) {
                     // 保存数据到 localStorage
                     localStorage.setItem('lastGeneratedReport', JSON.stringify(data.report));
+                    localStorage.setItem('lastTargetCategory', cat);
                     
                     notif.innerText = '报告诊断已生成！正在跳转到独立编辑器与预览中心...';
                     notif.style.background = 'rgba(16, 185, 129, 0.9)';

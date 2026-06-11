@@ -68,11 +68,63 @@ class LLMAnalyzer:
             except Exception as me:
                 logger.warning(f"Could not query supported models from LLM endpoint: {me}")
             
+    def _call_llm(self, system_prompt: str, prompt: str) -> str:
+        if "gemini" in self.model.lower():
+            from google import genai
+            from google.genai import types
+            
+            http_options = {'base_url': self.api_base} if self.api_base else None
+            client = genai.Client(
+                api_key=self.api_key or "dummy_key",
+                http_options=http_options
+            )
+            
+            response = client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.2
+                )
+            )
+            
+            raw_content = response.text
+            if not raw_content or not raw_content.strip():
+                raise ValueError("大模型返回空文本或未包含有效内容")
+            return raw_content
+            
+        else:
+            if not self.api_key:
+                logger.warning("未检测到 API 密钥，且非本地代理 Gemini 模型，尝试使用无鉴权方式调用")
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+    
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.2
+            }
+            
+            if "gpt" in self.model.lower():
+                payload["response_format"] = {"type": "json_object"}
+    
+            url = f"{self.api_base.rstrip('/')}/chat/completions"
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            res_json = response.json()
+            return res_json["choices"][0]["message"]["content"]
+
     def analyze(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         根据校验结果调用大模型进行根因分析与定责
         """
-        # 构建 prompt
         prompt = self._build_prompt(metrics, exceptions)
         
         # 动态获取 System Prompt
@@ -91,74 +143,63 @@ class LLMAnalyzer:
             else:
                 system_prompt = f"你是一个精通“跨境电商物流”的资深分析专家。请针对【{cat}】环节，根据提供的时效数据和异常信息，输出专业的定责考核报告。"
             
-            # 追加统一的格式要求
+        # 追加统一的格式要求（无论是默认还是自定义，必须强制要求 JSON 格式）
+        if "必须输出符合 Schema 要求" not in system_prompt:
             system_prompt += (
-                "\n2. 根据串点加时、漏扫描定责等底层规则，准确指出异常原因，避免误判。\n"
-                "3. 给出的优化建议必须具体、可执行，拒绝务虚。\n"
-                "4. 必须输出符合 Schema 要求的标准 JSON 字符串，不能含有 Markdown 格式的包裹（如 ```json），直接返回 JSON 本身。"
+                "\n\n【核心指令】\n"
+                "1. 根据串点加时、漏扫描定责等底层规则，准确指出异常原因，避免误判。\n"
+                "2. 给出的优化建议必须具体、可执行，拒绝务虚。\n"
+                "3. 必须严格输出符合以下 Schema 要求的标准 JSON 字符串，不能含有 Markdown 格式的包裹（如 ```json），直接返回纯 JSON 本身。"
             )
 
         try:
-            if "gemini" in self.model.lower():
-                from google import genai
-                from google.genai import types
-                
-                http_options = {'base_url': self.api_base} if self.api_base else None
-                client = genai.Client(
-                    api_key=self.api_key or "dummy_key",
-                    http_options=http_options
-                )
-                
-                response = client.models.generate_content(
-                    model=self.model,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_prompt,
-                        temperature=0.2
-                    )
-                )
-                
-                raw_content = response.text
-                if not raw_content or not raw_content.strip():
-                    raise ValueError("大模型返回空文本或未包含有效内容")
-                        
-                return self._parse_and_validate_json(raw_content, metrics, exceptions)
-                
-            else:
-                if not self.api_key:
-                    logger.warning("未检测到 API 密钥，且非本地代理 Gemini 模型，尝试使用无鉴权方式调用")
-                
-                headers = {
-                    "Content-Type": "application/json"
-                }
-                if self.api_key:
-                    headers["Authorization"] = f"Bearer {self.api_key}"
-        
-                # 构造请求体，开启 json_object 响应格式（如果模型支持）
-                payload = {
-                    "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.2
-                }
-                
-                # 如果是 gpt-4o 等模型，启用 response_format json_object
-                if "gpt" in self.model.lower():
-                    payload["response_format"] = {"type": "json_object"}
-        
-                url = f"{self.api_base.rstrip('/')}/chat/completions"
-                response = requests.post(url, headers=headers, json=payload, timeout=30)
-                response.raise_for_status()
-                res_json = response.json()
-                raw_content = res_json["choices"][0]["message"]["content"]
-                
-                return self._parse_and_validate_json(raw_content, metrics, exceptions)
-                
+            raw_content = self._call_llm(system_prompt, prompt)
+            return self._parse_and_validate_json(raw_content, metrics, exceptions)
         except Exception as e:
             logger.error(f"大模型 API 调用失败: {e}，触发本地 Mock 降级")
             return self._heuristic_mock_analysis(metrics, exceptions)
+
+    def iterate(self, current_report: Dict[str, Any], user_feedback: str) -> Dict[str, Any]:
+        """
+        根据用户的反馈二次迭代诊断报告
+        """
+        system_prompt = (
+            "你是一个精通跨境物流的 AI 分析助手。用户对当前的诊断报告提出了一些修改意见。\n"
+            "请根据用户的反馈，对现有的 JSON 报告进行修改，并严格返回更新后的 JSON 格式数据。\n"
+            "【核心指令】\n"
+            "1. 遵循用户的修改要求，调整对应的字段。\n"
+            "2. 保持原有未提及修改的字段内容不变。\n"
+            "3. 必须严格输出符合原 Schema 要求的标准 JSON 字符串，不能含有 Markdown 格式的包裹（如 ```json），直接返回纯 JSON 本身。"
+        )
+        
+        prompt = f"""
+【当前的 JSON 报告内容】
+{json.dumps(current_report, ensure_ascii=False, indent=2)}
+
+【用户的修改意见】
+{user_feedback}
+
+请根据修改意见返回完整的、更新后的 JSON 报告：
+"""
+        try:
+            raw_content = self._call_llm(system_prompt, prompt)
+            
+            cleaned_text = raw_content.strip()
+            if cleaned_text.startswith("```"):
+                lines = cleaned_text.splitlines()
+                if lines[0].startswith("```json") or lines[0].startswith("```"):
+                    cleaned_text = "\n".join(lines[1:-1])
+            cleaned_text = cleaned_text.strip()
+            
+            data = json.loads(cleaned_text)
+            required_keys = ["status", "title", "date", "summary", "metrics_display", "diagnosis_details", "action_suggestions"]
+            for key in required_keys:
+                if key not in data:
+                    raise KeyError(f"Missing key: {key}")
+            return data
+        except Exception as e:
+            logger.error(f"大模型二次迭代调用或解析失败: {e}")
+            raise Exception(f"AI 迭代失败，大模型返回格式有误: {e}")
 
     def _build_prompt(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]]) -> str:
         """
