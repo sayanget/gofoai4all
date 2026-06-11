@@ -6,6 +6,7 @@ import os
 import json
 import logging
 import requests
+import hashlib
 from typing import Dict, Any, List
 
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +19,7 @@ class LLMAnalyzer:
     """
 
     def __init__(self, target_category: str = ""):
+        self.target_category = target_category
         # 优先读取配置文件中的自定义大模型配置，其次读取环境变量，最后使用默认值
         config_api_key = None
         config_api_base = None
@@ -121,10 +123,36 @@ class LLMAnalyzer:
             res_json = response.json()
             return res_json["choices"][0]["message"]["content"]
 
+    def _get_cache_path(self, payload: Any) -> str:
+        """
+        根据输入 Payload 生成本地缓存文件路径
+        """
+        payload_str = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+        hash_str = hashlib.md5(payload_str.encode("utf-8")).hexdigest()
+        cache_dir = os.path.join("scratch", "cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        return os.path.join(cache_dir, f"{hash_str}.json")
+
     def analyze(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         根据校验结果调用大模型进行根因分析与定责
         """
+        # --- 本地缓存策略 ---
+        cache_payload = {
+            "type": "analyze",
+            "category": self.target_category,
+            "metrics": metrics,
+            "exceptions": exceptions
+        }
+        cache_path = self._get_cache_path(cache_payload)
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    logger.info("命中本地 Payload 哈希缓存，直接返回已生成的报告。")
+                    return json.load(f)
+            except Exception as e:
+                logger.warning(f"读取本地缓存失败: {e}")
+
         prompt = self._build_prompt(metrics, exceptions)
         
         # 动态获取 System Prompt
@@ -154,7 +182,14 @@ class LLMAnalyzer:
 
         try:
             raw_content = self._call_llm(system_prompt, prompt)
-            return self._parse_and_validate_json(raw_content, metrics, exceptions)
+            report = self._parse_and_validate_json(raw_content, metrics, exceptions)
+            # 保存到缓存
+            try:
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    json.dump(report, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.warning(f"写入本地缓存失败: {e}")
+            return report
         except Exception as e:
             logger.error(f"大模型 API 调用失败: {e}，触发本地 Mock 降级")
             return self._heuristic_mock_analysis(metrics, exceptions)
@@ -163,6 +198,22 @@ class LLMAnalyzer:
         """
         根据用户的反馈二次迭代诊断报告
         """
+        # --- 本地缓存策略 ---
+        cache_payload = {
+            "type": "iterate",
+            "category": self.target_category,
+            "current_report": current_report,
+            "user_feedback": user_feedback
+        }
+        cache_path = self._get_cache_path(cache_payload)
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    logger.info("命中本地 Iterate 哈希缓存，直接返回迭代报告。")
+                    return json.load(f)
+            except Exception as e:
+                logger.warning(f"读取本地缓存失败: {e}")
+
         system_prompt = (
             "你是一个精通跨境物流的 AI 分析助手。用户对当前的诊断报告提出了一些修改意见。\n"
             "请根据用户的反馈，对现有的 JSON 报告进行修改，并严格返回更新后的 JSON 格式数据。\n"
@@ -196,6 +247,14 @@ class LLMAnalyzer:
             for key in required_keys:
                 if key not in data:
                     raise KeyError(f"Missing key: {key}")
+            
+            # 保存到缓存
+            try:
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.warning(f"写入本地缓存失败: {e}")
+                
             return data
         except Exception as e:
             logger.error(f"大模型二次迭代调用或解析失败: {e}")
