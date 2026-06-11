@@ -46,9 +46,11 @@
     }
   },
   "vehicle_capacity": {
+    "53' Trailer": 12000,
+    "26' Boxtruck": 4000,
+    "22' Box Truck": 3385,
     "16' Box Truck": 1615,
-    "26' Boxtruck": 38,
-    "53' Trailer": 110,
+    "15' Box Truck": 1615,
     "Cargo Van": 1480
   }
 }

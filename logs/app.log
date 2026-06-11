@@ -155,3 +155,53 @@
  * Running on http://127.0.0.1:9999
  * Running on http://10.9.21.17:9999
 2026-06-11 14:07:04,816 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-06-11 14:09:59,283 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:09:59] "GET /feishu_config.html HTTP/1.1" 200 -
+2026-06-11 14:09:59,611 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:09:59] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 14:10:00,762 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:10:00] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:10:06,385 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:10:06] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:10:10,318 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:10:10] "GET /feishu_config.html HTTP/1.1" 200 -
+2026-06-11 14:10:10,533 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:10:10] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 14:10:10,779 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:10:10] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-06-11 14:10:13,402 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:10:13] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:14:00,701 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:9999
+ * Running on http://10.9.21.17:9999
+2026-06-11 14:14:00,701 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-06-11 14:14:03,380 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:14:03] "GET / HTTP/1.1" 200 -
+2026-06-11 14:14:03,671 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:14:03] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 14:14:05,443 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:14:05] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:14:06,427 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:14:06] "POST /api/verify_url HTTP/1.1" 200 -
+2026-06-11 14:14:16,893 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:14:16] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:14:19,007 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:14:19] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:14:24,619 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:14:24] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:44:11,972 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:44:11] "GET / HTTP/1.1" 200 -
+2026-06-11 14:44:12,243 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:44:12] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 14:44:12,628 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:44:12] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-06-11 14:44:13,537 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:44:13] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:44:14,785 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:44:14] "POST /api/verify_url HTTP/1.1" 200 -
+2026-06-11 14:52:32,578 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:52:32] "GET / HTTP/1.1" 200 -
+2026-06-11 14:52:32,822 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:52:32] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 14:52:33,108 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:52:33] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2026-06-11 14:52:34,412 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:52:34] "GET /api/list_backups HTTP/1.1" 200 -
+2026-06-11 14:52:35,052 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:52:35] "POST /api/verify_url HTTP/1.1" 200 -
+2026-06-11 14:52:46,439 - FeishuConfigServer - INFO - Successfully saved Feishu credentials to D:\project\gofoai\data\config\feishu_config.json
+2026-06-11 14:52:46,441 - FeishuConfigServer - INFO - Successfully saved KPI metrics to D:\project\gofoai\data\config\rules.json
+2026-06-11 14:52:46,441 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:52:46] "POST /api/save_config HTTP/1.1" 200 -
+2026-06-11 14:52:46,485 - FeishuConfigServer - INFO - Executing real daily pipeline for manual review... target_category: 调度, file_path: None
+2026-06-11 14:52:46,486 - FeishuConfigServer - INFO - Read feishu_url from rules.json: 'https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv' for category '调度'
+2026-06-11 14:52:47,738 - FeishuConfigServer - INFO - TMSExtractor.extract called with data_path=https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv
+2026-06-11 14:52:47,738 - FeishuConfigServer - INFO - Feishu URL detected: https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv, fetching...
+2026-06-11 14:52:51,157 - FeishuConfigServer - INFO - Feishu fetch success, rows: 14147
+2026-06-11 14:52:55,517 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-06-11 14:53:05,993 - httpx - INFO - HTTP Request: POST http://127.0.0.1:8085/v1beta/models/gemini-3.5-flash:generateContent "HTTP/1.0 200 OK"
+2026-06-11 14:53:06,002 - FeishuConfigServer - INFO - Daily pipeline completed successfully.
+2026-06-11 14:53:06,004 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:53:06] "POST /api/generate_report HTTP/1.1" 200 -
+2026-06-11 14:53:07,050 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:53:07] "[36mGET /card_editor.html HTTP/1.1[0m" 304 -
+2026-06-11 14:54:15,173 - FeishuCardSender - INFO - 使用企业自建应用发送消息 (App ID: cli_a9fc1c1c0bb8dbcb, Chat ID: oc_9deed7667aec86791fc93583b28ae2c6)...
+2026-06-11 14:54:17,406 - FeishuCardSender - INFO - 自建应用消息卡片发送完成，HTTP 返回码: 200，响应: {"code":0,"data":{"body":{"content":"{\"title\":\"2026年6月CNO.H始发跨境干线与卡车调度定责考核报告 ()\",\"elements\":[[{\"tag\":\"text\",\"text\":\"📢 运营大盘快报：\"},{\"tag\":\"text\",\"text\":\"\\n\u003e 针对6月份CNO.H始发数据的筛查分析显示，当日共拉取并处理异常明细数据1625条（样本显示5条，其余省略1620条）。大盘整体运行面临严重红线危机：卸车及时率（0.0%）、班次发货及时率（92.7%）及TMS操作率（85.7%）均未达到考核红线，触发“danger”极高风险预警。发车准点率表面达标（98.4%），但底层漏扫描、串点未发车及系统操作滞后问题严重，严重掩盖了实际干线时效异常，亟需对CNO.H节点进行全面定责与流程整改。\"}],[{\"tag\":\"hr\"}],[{\"tag\":\"text\",\"text\":\"📊 核心指标达成情况：\"}],[{\"tag\":\"img\",\"image_key\":\"img_v3_02ad_e19fca1f-912a-450e-95de-3c229091b53g\"},{\"tag\":\"text\",\"text\":\"请将客户端升级至最新版本，以查看表格内容\"},{\"tag\":\"text\",\"text\":\"\"}],[{\"tag\":\"hr\"}],[{\"tag\":\"text\",\"text\":\"🔍 AI 专家定责诊断：\"},{\"tag\":\"text\",\"text\":\"\\n\u003e 🚨 \"},{\"tag\":\"text\",\"text\":\"[核心异常]\"},{\"tag\":\"text\",\"text\":\" 【串点漏扫描定责】车次 MT2026060100371、MT2026051100358、MT2026051900343 表现为“已到站未发车”，系统记录其实际发车时间为 None，但下一站已有到车扫描。根据底层规则判定，此现象属于典型的始发站 CNO.H 现场操作人员“漏扫描/漏发车操作”造成的系统伪异常。车次实际已发出并抵达，定责为 CNO.H 始发地节点 TMS 操作违规，导致发车时效数据失真。\\n\u003e\\n\u003e 🚨 \"},{\"tag\":\"text\",\"text\":\"[核心异常]\"},{\"tag\":\"text\",\"text\":\" 【承运商严重晚点定责】车次 MT2026051400356 计划发车时间为 2026-05-14 14:00:00，实际发车时间为 2026-05-15 10:41:15，延误时长超20小时。排除系统串点因素后，判定为承运商无故缺到或CNO.H现场压货，严重击穿“计划发车时间 + 30分钟”的准点红线，定责为承运商/CNO.H调度共同责任。\\n\u003e\\n\u003e ⚠️ \"},{\"tag\":\"text\",\"text\":\"[运营瓶颈]\"},{\"tag\":\"text\",\"text\":\" 【现场调度操作滞后】车次 MT2026051400253 实际发车时间较计划晚点27分钟，虽未击穿30分钟考核红线，但结合整体卸车及时率为 0.0% 的极端数据，暴露出 CNO.H 现场卡班调度、月台指引及截单后的集包打板效率极低，导致后续多班次出现压港，进而引发班次发货及时率跌至 92.7%。\"}],[{\"tag\":\"hr\"}],[{\"tag\":\"text\",\"text\":\"📋 协同改善要求：\"},{\"tag\":\"text\",\"text\":\"\\n\u003e 💡 \"},{\"tag\":\"text\",\"text\":\"行动建议 1\"},{\"tag\":\"text\",\"text\":\": 【现场操作规范】由CNO.H现场操作负责人牵头，针对所有出场车辆强制执行电子围栏自适应校验与人工复核双保险。严禁在系统未点击“发车”的情况下放行车辆，针对漏扫、串点定责的3个车次责任人进行内部通报批评。截止时间：2026-06-14。\\n\u003e\\n\u003e 💡 \"},{\"tag\":\"text\",\"text\":\"行动建议 2\"},{\"tag\":\"text\",\"text\":\": 【卸车与时效整改】针对卸车及时率 0.0% 的恶性问题，CNO.H 站长须在48小时内重新梳理到车签到至入库解袋的流转链条，确保 GPS 到车后立即启动卸车扫描，分流向严格卡死运力截单时间。截止时间：2026-06-13。\\n\u003e\\n\u003e 💡 \"},{\"tag\":\"text\",\"text\":\"行动建议 3\"},{\"tag\":\"text\",\"text\":\": 【承运商履约约谈】运力调度组约谈车次 MT2026051400356 的承运商负责人，对跨日晚点行为依合同罚则扣除当月履约保证金，并责令其提交运力备用保障方案。截止时间：2026-06-15。\\n\u003e\\n\u003e 💡 \"},{\"tag\":\"text\",\"text\":\"行动建议 4\"},{\"tag\":\"text\",\"text\":\": 【装载率配载优化】鉴于线路装载率仅 54.7%，干线调度组需重新评估53' Trailer等大车型的使用频次。在满足班次发货及时率的前提下，对低货量流向适度下调车型配置（如切换为 26' Boxtruck），提升资源利用率。截止时间：2026-06-18。\"}],[{\"tag\":\"hr\"}],[{\"tag\":\"button\",\"text\":\"📥 转为跟进工单\",\"type\":\"primary\"},{\"tag\":\"button\",\"text\":\"❓ 申诉/误报反馈\",\"type\":\"default\"}]]}"},"chat_id":"oc_9deed7667aec86791fc93583b28ae2c6","create_time":"1781214856611","deleted":false,"message_id":"om_x100b6d86a64e1d34c2acac6f3cf0ab5","msg_type":"interactive","sender":{"id":"cli_a9fc1c1c0bb8dbcb","id_type":"app_id","sender_type":"app","tenant_key":"1b75c56c381cd740"},"update_time":"1781214856611","updated":false},"msg":"success"}
+2026-06-11 14:54:17,410 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 14:54:17] "POST /api/send_edited_card HTTP/1.1" 200 -
+2026-06-11 15:17:57,991 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 15:17:57] "GET /feishu_config.html HTTP/1.1" 200 -
+2026-06-11 15:17:58,426 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 15:17:58] "GET /api/get_config HTTP/1.1" 200 -
+2026-06-11 15:18:01,023 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 15:18:01] "POST /api/verify_url HTTP/1.1" 200 -
+2026-06-11 15:18:46,392 - werkzeug - INFO - 127.0.0.1 - - [11/Jun/2026 15:18:46] "POST /api/verify_url HTTP/1.1" 200 -
