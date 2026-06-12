@@ -62,19 +62,19 @@ def send_feishu_card(agent_output: Dict[str, Any], webhook_url: str, secret: str
             "status": status_text
         })
     
-    # 3. 组装诊断结论 & 改善建议 markdown (采用引言块/引用块，使其极具层次感)
+    # 3. 组装诊断结论 & 改善建议 markdown
     diagnosis_items = []
     for d in agent_output.get("diagnosis_details", []):
         d_type = d.get("type", "异常")
         content = d.get("content", "")
         icon = "🚨" if d_type == "核心异常" else "⚠️"
-        diagnosis_items.append(f"> {icon} **[{d_type}]** {content}")
-    diagnosis_content = "\n>\n".join(diagnosis_items) if diagnosis_items else "> *未检测到核心异常*"
+        diagnosis_items.append(f"{icon} **[{d_type}]** {content}")
+    diagnosis_content = "\n\n".join(diagnosis_items) if diagnosis_items else "*未检测到核心异常*"
         
     suggestions_items = []
     for i, s in enumerate(agent_output.get("action_suggestions", []), 1):
-        suggestions_items.append(f"> 💡 **行动建议 {i}**: {s}")
-    suggestions_content = "\n>\n".join(suggestions_items) if suggestions_items else "> *无需额外改善动作*"
+        suggestions_items.append(f"💡 **行动建议 {i}**: {s}")
+    suggestions_content = "\n\n".join(suggestions_items) if suggestions_items else "*无需额外改善动作*"
 
     title_content = f"{title} ({date_str})" if date_str else title
 
@@ -97,7 +97,7 @@ def send_feishu_card(agent_output: Dict[str, Any], webhook_url: str, secret: str
                     "tag": "div",
                     "text": {
                         "tag": "lark_md",
-                        "content": f"**📢 运营大盘快报：**\n> {summary}"
+                        "content": f"**📢 运营大盘快报：**\n{summary}"
                     }
                 },
                 {
