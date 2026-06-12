@@ -218,7 +218,7 @@ def run_pipeline(target_category: str = "", file_path: str = None) -> dict:
     raw_data = None
     if file_path and os.path.exists(file_path):
         from tools.tms_extractor import TMSExtractor
-        extractor = TMSExtractor(file_path)
+        extractor = TMSExtractor(file_path, target_category=target_category)
         raw_data = extractor.extract()
     else:
         try:
@@ -234,7 +234,7 @@ def run_pipeline(target_category: str = "", file_path: str = None) -> dict:
 
         if feishu_url and feishu_url.startswith("http") and "feishu.cn" in feishu_url:
             from tools.tms_extractor import TMSExtractor
-            extractor = TMSExtractor(feishu_url)
+            extractor = TMSExtractor(feishu_url, target_category=target_category)
             raw_data = extractor.extract()
         else:
             import logging
@@ -246,7 +246,12 @@ def run_pipeline(target_category: str = "", file_path: str = None) -> dict:
     
     # Step 2: 提取结果送入 AI 诊断引擎
     analyzer = LLMAnalyzer(target_category=target_category)
-    ai_report = analyzer.analyze(check_results["metrics"], check_results["exceptions"])
+    ai_report = analyzer.analyze(
+        check_results["metrics"], 
+        check_results["exceptions"],
+        total_rows_extracted=check_results.get("total_rows_extracted", 0),
+        raw_data_sample=check_results.get("raw_data_sample", [])
+    )
     
     # Step 3: 使用飞书分发层渲染 interactive payload
     distributor = FeishuDistributor()

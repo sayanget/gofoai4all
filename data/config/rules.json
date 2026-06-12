@@ -79,7 +79,7 @@
       }
     },
     "调度": {
-      "data_source": "https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=A6NfPv",
+      "data_source": "https://acnjh1thgeif.feishu.cn/sheets/KMqBsrOsAhkepOtmYhrcSM23nqh?sheet=95Mzqn",
       "metrics": {
         "到达准点率": {
           "control_level": "考核",
@@ -88,7 +88,7 @@
         },
         "卸车及时率": {
           "control_level": "考核",
-          "description": "准点卸车车次数 / (准点 + 晚点 + 漏卸车 + 本站发车未扫袋牌车次)。",
+          "description": "卸车及时率 = 实际到车时间或班次开始时间-最小卸车签入时间差≤1 小时的车次 ÷ 到车总车次数 ×100%",
           "red_line": 0.95
         },
         "发车准点率": {

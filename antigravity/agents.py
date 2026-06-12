@@ -79,7 +79,12 @@ class Agent:
         exceptions = tool_output.get("exceptions", [])
         
         # 使用 LLM 或者是内置的 LLMAnalyzer 逻辑
-        ai_report = self.analyzer.analyze(metrics, exceptions)
+        ai_report = self.analyzer.analyze(
+            metrics, 
+            exceptions,
+            total_rows_extracted=tool_output.get("total_rows_extracted", 0),
+            raw_data_sample=tool_output.get("raw_data_sample", [])
+        )
         
         # 返回符合 response.content 的 Response 结构
         report_str = json.dumps(ai_report, ensure_ascii=False)

@@ -128,33 +128,19 @@ class LLMAnalyzer:
         """
         根据输入 Payload 生成本地缓存文件路径
         """
-        payload_str = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+        payload_str = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
         hash_str = hashlib.md5(payload_str.encode("utf-8")).hexdigest()
         cache_dir = CACHE_DIR
         os.makedirs(cache_dir, exist_ok=True)
         return os.path.join(cache_dir, f"{hash_str}.json")
 
-    def analyze(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]], total_rows_extracted: int = 0, raw_data_sample: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         根据校验结果调用大模型进行根因分析与定责
         """
-        # --- 本地缓存策略 ---
-        cache_payload = {
-            "type": "analyze",
-            "category": self.target_category,
-            "metrics": metrics,
-            "exceptions": exceptions
-        }
-        cache_path = self._get_cache_path(cache_payload)
-        if os.path.exists(cache_path):
-            try:
-                with open(cache_path, "r", encoding="utf-8") as f:
-                    logger.info("命中本地 Payload 哈希缓存，直接返回已生成的报告。")
-                    return json.load(f)
-            except Exception as e:
-                logger.warning(f"读取本地缓存失败: {e}")
-
-        prompt = self._build_prompt(metrics, exceptions)
+        raw_data_sample = raw_data_sample or []
+        user_prompt_str = getattr(self, 'custom_prompt', "")
+        prompt = self._build_prompt(metrics, exceptions, total_rows_extracted, raw_data_sample, user_prompt=user_prompt_str)
         
         # 动态获取 System Prompt
         if getattr(self, 'custom_prompt', None):
@@ -181,6 +167,24 @@ class LLMAnalyzer:
                 "3. 必须严格输出符合以下 Schema 要求的标准 JSON 字符串，不能含有 Markdown 格式的包裹（如 ```json），直接返回纯 JSON 本身。"
             )
 
+        # --- 本地缓存策略 ---
+        cache_payload = {
+            "type": "analyze",
+            "category": self.target_category,
+            "metrics": metrics,
+            "exceptions": exceptions,
+            "system_prompt": system_prompt,
+            "prompt": prompt
+        }
+        cache_path = self._get_cache_path(cache_payload)
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    logger.info("命中本地 Payload 哈希缓存，直接返回已生成的报告。")
+                    return json.load(f)
+            except Exception as e:
+                logger.warning(f"读取本地缓存失败: {e}")
+
         try:
             raw_content = self._call_llm(system_prompt, prompt)
             report = self._parse_and_validate_json(raw_content, metrics, exceptions)
@@ -199,22 +203,6 @@ class LLMAnalyzer:
         """
         根据用户的反馈二次迭代诊断报告
         """
-        # --- 本地缓存策略 ---
-        cache_payload = {
-            "type": "iterate",
-            "category": self.target_category,
-            "current_report": current_report,
-            "user_feedback": user_feedback
-        }
-        cache_path = self._get_cache_path(cache_payload)
-        if os.path.exists(cache_path):
-            try:
-                with open(cache_path, "r", encoding="utf-8") as f:
-                    logger.info("命中本地 Iterate 哈希缓存，直接返回迭代报告。")
-                    return json.load(f)
-            except Exception as e:
-                logger.warning(f"读取本地缓存失败: {e}")
-
         system_prompt = (
             "你是一个精通跨境物流的 AI 分析助手。用户对当前的诊断报告提出了一些修改意见。\n"
             "请根据用户的反馈，对现有的 JSON 报告进行修改，并严格返回更新后的 JSON 格式数据。\n"
@@ -233,6 +221,24 @@ class LLMAnalyzer:
 
 请根据修改意见返回完整的、更新后的 JSON 报告：
 """
+
+        # --- 本地缓存策略 ---
+        cache_payload = {
+            "type": "iterate",
+            "category": self.target_category,
+            "current_report": current_report,
+            "user_feedback": user_feedback,
+            "system_prompt": system_prompt,
+            "prompt": prompt
+        }
+        cache_path = self._get_cache_path(cache_payload)
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    logger.info("命中本地 Iterate 哈希缓存，直接返回迭代报告。")
+                    return json.load(f)
+            except Exception as e:
+                logger.warning(f"读取本地缓存失败: {e}")
         try:
             raw_content = self._call_llm(system_prompt, prompt)
             
@@ -263,11 +269,12 @@ class LLMAnalyzer:
             logger.error(f"大模型二次迭代调用或解析失败: {e}")
             raise Exception(f"AI 迭代失败，大模型返回格式有误: {e}")
 
-    def _build_prompt(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]]) -> str:
+    def _build_prompt(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]], total_rows_extracted: int = 0, raw_data_sample: List[Dict[str, Any]] = None, user_prompt: str = "") -> str:
         """
         构建包含静态规则和动态运行快照的 Prompt
         """
         import rules_config
+        raw_data_sample = raw_data_sample or []
         
         # 提取动态规则内容
         rules_text = "【当前生效的大盘考核规则与红线】\n"
@@ -278,18 +285,47 @@ class LLMAnalyzer:
         for k, v in rules_config.VEHICLE_CAPACITY.items():
             rules_text += f"- {k}: 额定 {v} 件\n"
 
+        rules_text += f"\n【本次数据抓取概要】\n"
+        rules_text += f"- 总计从数据源抓取了 {total_rows_extracted} 条记录。\n"
+        if raw_data_sample:
+            rules_text += f"- 数据表字段样本 (前几行原始数据，供理解表格结构):\n"
+            rules_text += json.dumps(raw_data_sample, ensure_ascii=False) + "\n"
+
         formatted_metrics = []
         for name, val in metrics.items():
             rate_str = f"{val['rate']*100:.1f}%" if "rate" in val else "N/A"
             formatted_metrics.append(f"- {name}: 实际完成 {rate_str} (状态: {val['status']})")
 
+        # 优先将用户在 prompt 中提及的车辆 ID 或订单号前置
+        prioritized_exceptions = []
+        other_exceptions = []
+        if user_prompt:
+            for ex in exceptions:
+                ex_str = str(ex)
+                if any(word in ex_str for word in user_prompt.split() if len(word) > 4 and word.isalnum()):
+                    prioritized_exceptions.append(ex)
+                else:
+                    other_exceptions.append(ex)
+            exceptions_to_use = prioritized_exceptions + other_exceptions
+        else:
+            exceptions_to_use = exceptions
+
         formatted_exceptions = []
-        max_exceptions_to_prompt = 5
-        for i, ex in enumerate(exceptions[:max_exceptions_to_prompt], 1):
+        max_exceptions_to_prompt = 15
+        for i, ex in enumerate(exceptions_to_use[:max_exceptions_to_prompt], 1):
+            # 提取核心展示字段
+            metric_name = ex.get('metric_name', 'Unknown')
+            ex_id = ex.get('id', 'Unknown')
+            status = ex.get('status', 'Unknown')
+            reason = ex.get('reason', 'Unknown')
+            
+            # 其余所有字段作为补充上下文序列化给大模型
+            extra_data = {k: v for k, v in ex.items() if k not in ['metric_name', 'id', 'status', 'reason']}
+            
             formatted_exceptions.append(
-                f"{i}. 指标: {ex['metric_name']} | ID: {ex['id']} | 异常状态: {ex['status']}\n"
-                f"   - 原因: {ex['reason']}\n"
-                f"   - 数据细节: {ex['details']}"
+                f"{i}. 指标: {metric_name} | ID: {ex_id} | 异常状态: {status}\n"
+                f"   - 原因: {reason}\n"
+                f"   - 异常原始数据上下文: {json.dumps(extra_data, ensure_ascii=False, default=str)}"
             )
             
         if len(exceptions) > max_exceptions_to_prompt:

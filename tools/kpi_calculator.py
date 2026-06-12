@@ -422,6 +422,8 @@ def calculate_dispatch_metrics(raw_data_path: str) -> str:
     # 返回给 Agent 的结构化大盘快照
     processed_metrics = {
         "metrics": metrics_results,
-        "exceptions": exceptions
+        "exceptions": exceptions,
+        "total_rows_extracted": raw_data.get("_total_rows", 0),
+        "raw_data_sample": raw_data.get("_raw_sample", [])
     }
     return json.dumps(processed_metrics, ensure_ascii=False)

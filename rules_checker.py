@@ -31,7 +31,9 @@ class RulesChecker:
         
         return {
             "metrics": self.metrics_results,
-            "exceptions": self.exceptions
+            "exceptions": self.exceptions,
+            "total_rows_extracted": self.raw_data.get("_total_rows", 0),
+            "raw_data_sample": self.raw_data.get("_raw_sample", [])
         }
 
     def _check_dispatch_punctuality(self):
@@ -64,13 +66,15 @@ class RulesChecker:
             if res["status"] == "准点":
                 punctual_count += 1
             else:
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "发车准点率",
                     "id": r["trip_id"],
                     "status": res["status"],
                     "reason": res["reason"],
                     "details": f"计划发车: {r['planned_departure']}, 实际发车: {r.get('actual_departure')}"
                 })
+                self.exceptions.append(exception_entry)
                 
         rate = punctual_count / total_valid if total_valid > 0 else 1.0
         red_line = rules_config.METRICS_CONFIG.get("发车准点率", {}).get("red_line", 0.95)
@@ -106,13 +110,15 @@ class RulesChecker:
             
             # 如果某条线总体装载率太低（比如低于50%），计入异常报警
             if load_rate < 0.50:
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "线路装载率",
                     "id": r["trip_id"],
                     "status": "装载不足",
                     "reason": f"车型 {r['vehicle_type']} 综合装载率 {load_rate*100:.1f}% 低于 50% 阈值",
                     "details": f"腿数据: {r['legs']}"
                 })
+                self.exceptions.append(exception_entry)
                 
         overall_rate = total_weighted_load_rate / total_miles if total_miles > 0 else 0.0
         self.metrics_results["线路装载率"] = {
@@ -145,13 +151,15 @@ class RulesChecker:
             if res["status"] == "合格":
                 qualified_count += 1
             else:
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "运行合格率",
                     "id": r["trip_id"],
                     "status": "不合格",
                     "reason": res["reason"],
                     "details": f"计划运行时长: {r['planned_duration_hours']}h, 实际运行时长: {r.get('actual_duration_hours')}h"
                 })
+                self.exceptions.append(exception_entry)
                 
         rate = qualified_count / total_valid if total_valid > 0 else 1.0
         self.metrics_results["运行合格率"] = {
@@ -186,13 +194,15 @@ class RulesChecker:
             if res["status"] == "准点":
                 punctual_count += 1
             else:
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "到达准点率",
                     "id": r["trip_id"],
                     "status": "晚点",
                     "reason": res["reason"],
                     "details": f"计划到达: {r['planned_arrival']}, 实际到达: {r.get('actual_arrival')}"
                 })
+                self.exceptions.append(exception_entry)
                 
         rate = punctual_count / total_valid if total_valid > 0 else 1.0
         self.metrics_results["到达准点率"] = {
@@ -228,13 +238,15 @@ class RulesChecker:
             shift_rate = r["on_time_dispatched_qty"] / r["signed_in_qty"] if r["signed_in_qty"] > 0 else 1.0
             shift_red_line = rules_config.METRICS_CONFIG.get("班次发货及时率", {}).get("red_line", 0.95)
             if shift_rate < shift_red_line:
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "班次发货及时率",
                     "id": r["shift_id"],
                     "status": "发货不及时",
                     "reason": f"班次发货率 {shift_rate*100:.1f}% 低于红线",
                     "details": f"签入件数: {r['signed_in_qty']}, 准时发出件数: {r['on_time_dispatched_qty']}"
                 })
+                self.exceptions.append(exception_entry)
                 
         rate = on_time_dispatched / total_signed_in if total_signed_in > 0 else 1.0
         red_line = rules_config.METRICS_CONFIG.get("班次发货及时率", {}).get("red_line", 0.95)
@@ -294,13 +306,15 @@ class RulesChecker:
             op_rate = actual_ops / expected_ops
             tms_red_line = rules_config.METRICS_CONFIG.get("TMS操作率", {}).get("red_line", 0.92)
             if op_rate < tms_red_line:
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "TMS操作率",
                     "id": r["trip_id"],
                     "status": "漏操作",
                     "reason": f"操作率 {op_rate*100:.1f}% 低于红线 (应操作: {expected_ops}, 实操作: {actual_ops})",
                     "details": f"规则触发 - JFK: {r.get('is_jfk')}, JFK-EWR: {r.get('is_jfk_ewr_customs_clearance')}, 站点始发: {r.get('is_origin_site')}, 地面目的: {r.get('is_dest_ground')}"
                 })
+                self.exceptions.append(exception_entry)
                 
         rate = total_actual / total_expected if total_expected > 0 else 1.0
         tms_red_line = rules_config.METRICS_CONFIG.get("TMS操作率", {}).get("red_line", 0.92)
@@ -340,21 +354,25 @@ class RulesChecker:
                 punctual_count += 1
             elif res["status"] == "定责上游晚点":
                 # 定责出发地，在分母中计为异常车辆，本车不扣本站卸车率，但列入定责上游异常列表
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "卸车及时率",
                     "id": r["trip_id"],
                     "status": "定责上游",
                     "reason": res["reason"],
                     "details": f"到车: {r.get('actual_arrival')}, 装车袋数: {r.get('loaded_bags_qty')}"
                 })
+                self.exceptions.append(exception_entry)
             else:
-                self.exceptions.append({
+                exception_entry = {**r}
+                exception_entry.update({
                     "metric_name": "卸车及时率",
                     "id": r["trip_id"],
                     "status": res["status"],
                     "reason": res["reason"],
                     "details": f"到车: {r.get('actual_arrival')}, 第一枪: {r.get('first_unloading_scan')}"
                 })
+                self.exceptions.append(exception_entry)
                 
         rate = punctual_count / total_valid if total_valid > 0 else 1.0
         unload_red_line = rules_config.METRICS_CONFIG.get("卸车及时率", {}).get("red_line", 0.95)

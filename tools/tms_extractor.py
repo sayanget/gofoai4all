@@ -13,8 +13,9 @@ class TMSExtractor:
     """
     负责从原始数据源 (Excel/CSV) 抽取调度数据，并转化为统一结构。
     """
-    def __init__(self, data_path: str):
+    def __init__(self, data_path: str, target_category: str = ""):
         self.data_path = data_path
+        self.target_category = target_category
 
     def extract(self) -> Dict[str, List[Dict[str, Any]]]:
         """
@@ -30,8 +31,15 @@ class TMSExtractor:
                 logger.info(f"Feishu URL detected: {self.data_path}, fetching...")
                 try:
                     df = self.fetch_feishu_sheet(self.data_path)
-                    logger.info(f"Feishu fetch success, rows: {len(df)}")
-                    return self._map_feishu_data(df.to_dict(orient="records"))
+                    logger.info(f"Feishu fetch success, raw rows: {len(df)}")
+                    
+                    # 尝试根据用户的自定义提示词，动态使用大模型生成 Pandas 过滤条件
+                    df = self._apply_dynamic_prompt_filter(df)
+                    
+                    res = self._map_feishu_data(df.to_dict(orient="records"))
+                    res["_total_rows"] = len(df)
+                    res["_raw_sample"] = df.head(5).to_dict(orient="records")
+                    return res
                 except Exception as e:
                     logger.error(f"Feishu fetch failed: {e}")
                     import traceback
@@ -39,6 +47,7 @@ class TMSExtractor:
                     raise ValueError(f"数据源读取失败: {str(e)}")
 
             # 本地文件读取逻辑
+
             if not os.path.exists(self.data_path):
                 return self._get_fallback_mock_data()
                 
@@ -64,6 +73,63 @@ class TMSExtractor:
         except Exception as e:
             logger.error(f"Unknown error in extract: {e}")
             return self._get_fallback_mock_data()
+
+    def _apply_dynamic_prompt_filter(self, df: pd.DataFrame) -> pd.DataFrame:
+        """根据 LLM 自定义提示词中的要求，动态过滤 DataFrame"""
+        import logging
+        logger = logging.getLogger("FeishuConfigServer")
+        if not self.target_category:
+            return df
+            
+        feishu_config = {}
+        if os.path.exists(FEISHU_CONFIG_FILE):
+            try:
+                with open(FEISHU_CONFIG_FILE, "r", encoding="utf-8") as f:
+                    feishu_config = json.load(f)
+            except Exception:
+                pass
+                
+        custom_prompts = feishu_config.get("llm_custom_prompts", {})
+        prompt = custom_prompts.get(self.target_category, "")
+        
+        if not prompt or ("筛选" not in prompt and "只看" not in prompt and "过滤" not in prompt and "仅分析" not in prompt):
+            return df
+            
+        logger.info(f"Detected filter intent in custom prompt for {self.target_category}. Asking LLM to generate pandas query...")
+        
+        try:
+            from llm_analyzer import LLMAnalyzer
+            analyzer = LLMAnalyzer(target_category=self.target_category)
+            columns_str = ", ".join(df.columns.tolist()[:30]) # Show first 30 cols to save tokens
+            system_instruction = (
+                "你是一个精通 Python Pandas 的程序员。用户提示词中包含对数据的过滤需求。\n"
+                f"当前 DataFrame `df` 的列名包含：[{columns_str}]\n"
+                "请编写一个 Python 过滤函数。函数签名必须是 `def filter_df(df):`。\n"
+                "函数内部请实现对应的过滤逻辑并返回新的 df。如果无需过滤请直接 return df。\n"
+                "如果需要基于日期或月份筛选，请注意把相应的字符串列转为 datetime 对象后再过滤。过滤时处理好空值。\n"
+                "千万不要使用未导入的外部函数（如 empty() ），直接使用 pandas 自带的 df.empty 或 pd.isna()。\n"
+                "你的输出必须只有纯 Python 代码，绝对不能包含 markdown 标记或任何其他文本！"
+            )
+            
+            code_str = analyzer._call_llm(system_instruction, f"用户的提示词为：\n{prompt}")
+            code_str = code_str.strip()
+            if code_str.startswith("```"):
+                lines = code_str.splitlines()
+                if len(lines) > 2:
+                    code_str = "\n".join(lines[1:-1]).strip()
+                    
+            logger.info(f"Executing LLM generated filter function:\n{code_str}")
+            local_vars = {}
+            exec(code_str, {'pd': pd, 'datetime': datetime}, local_vars)
+            
+            if 'filter_df' in local_vars:
+                df_filtered = local_vars['filter_df'](df)
+                logger.info(f"Filtered rows from {len(df)} to {len(df_filtered)}")
+                return df_filtered
+        except Exception as e:
+            logger.warning(f"Failed to apply dynamic prompt filter: {e}")
+            
+        return df
 
     def fetch_feishu_sheet(self, url: str) -> pd.DataFrame:
         import requests
@@ -186,35 +252,41 @@ class TMSExtractor:
             act_arr = excel_to_dt(row.get("实际到车时间(本地时区)"))
             route = row.get("发车路段", "")
             departure_loc = row.get("车辆出发地", "")
-            
-            # 根据用户要求，精确过滤车辆出发地为 CNO.H 的数据
-            if departure_loc != "CNO.H":
-                continue
+            arrival_loc = row.get("车辆到达地", "")
             
             # 只有当包含有效 trip_id 时才加入 (过滤掉空行)
             if str(trip_id).strip() and str(trip_id).strip() != "Unknown":
                 dispatch_punctuality.append({
+                    **row,
                     "trip_id": trip_id,
                     "planned_departure": plan_dep,
                     "actual_departure": act_dep,
                     "actual_arrival_next_station": act_arr,
+                    "origin": departure_loc,
+                    "destination": arrival_loc,
                     "is_from_site": False
                 })
                 
                 arrival_punctuality.append({
+                    **row,
                     "trip_id": trip_id,
                     "planned_arrival": plan_arr,
                     "actual_arrival": act_arr,
+                    "origin": departure_loc,
+                    "destination": arrival_loc,
                     "prev_station_departure": act_dep
                 })
                 
                 unloading_timeliness.append({
+                    **row,
                     "trip_id": trip_id,
                     "actual_arrival": act_arr,
-                    "first_unloading_scan": None, # 缺少真实打枪数据，留空触发漏卸车或定责
+                    "first_unloading_scan": excel_to_dt(row.get("最小卸车签入时间(本地时区)")),
                     "has_inbound_manifest": True,
-                    "loaded_bags_qty": 10, # Mock 数据兜底
-                    "route_name": route
+                    "loaded_bags_qty": row.get("装车签出袋号数", 10),
+                    "route_name": route,
+                    "origin": departure_loc,
+                    "destination": arrival_loc
                 })
 
         mock = self._get_fallback_mock_data()
