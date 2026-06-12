@@ -1244,7 +1244,7 @@
                             <label style="font-size:0.8rem;">说明</label>
                             <textarea class="metric-desc auto-expand" rows="1" placeholder="规则业务说明" style="overflow-y: hidden; resize: none; width: 100%; box-sizing: border-box; padding: 12px 16px;">${desc}</textarea>
                         </div>
-                        <button class="btn delete-btn" style="padding:8px; margin-bottom:0;" onclick="this.closest('.metric-row').remove()">删除</button>
+                        <button class="btn delete-btn" style="padding:8px; margin-bottom:0;" onclick="deleteMetricRow(this)">删除</button>
                     </div>
                 </div>
             `;
@@ -1255,6 +1255,7 @@
             const catId = 'cat_' + Date.now() + Math.floor(Math.random() * 1000);
             const div = document.createElement('div');
             div.className = 'category-card';
+            div.dataset.catId = catId;
             div.style.border = '1px solid rgba(255,255,255,0.1)';
             div.style.padding = '16px';
             div.style.marginBottom = '20px';
@@ -1262,28 +1263,35 @@
             div.style.background = 'rgba(0,0,0,0.2)';
             
             let metricsHtml = '';
+            let metricCount = 0;
             Object.entries(metrics).forEach(([mName, meta]) => {
                 metricsHtml += createMetricRowHtml(mName, meta);
+                metricCount++;
             });
 
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <input type="text" class="cat-name-input" value="${catName}" placeholder="输入大分类名称 (如：TMS类指标)" style="font-size:1.1em; font-weight:bold; width:300px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCategoryDetails('${catId}')">
+                    <div style="display:flex; gap:12px; align-items:center; flex:1;">
+                        <span id="${catId}_icon" style="transition: transform 0.3s; display:inline-block; font-size:12px; color:var(--text-secondary);">▶</span>
+                        <input type="text" class="cat-name-input" value="${catName}" placeholder="输入大分类名称 (如：TMS类指标)" style="font-size:1.1em; font-weight:bold; width:300px; margin-bottom:0;" onclick="event.stopPropagation()">
+                        <span id="${catId}_count" style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; margin-left: 10px;">${metricCount} 个指标</span>
                     </div>
-                    <button class="btn delete-btn" style="margin-left:12px; padding:6px 12px;" onclick="this.closest('.category-card').remove()">删除分类</button>
+                    <button class="btn delete-btn" style="margin-left:12px; padding:6px 12px;" onclick="event.stopPropagation(); this.closest('.category-card').remove()">删除分类</button>
                 </div>
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="font-size:0.85rem; color:var(--text-secondary);">该分类对应的数据源链接 (支持长链接检查)</label>
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <input type="text" class="cat-source-input" value="${dataSource}" placeholder="填写该分类通用的数据源链接 (飞书URL)..." style="flex:1; margin-bottom:0;" oninput="triggerUrlValidation(this)">
-                        <div class="validation-status" style="width:200px; text-align:right;"></div>
+                
+                <div id="${catId}_content" style="display: none; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 15px; padding-top: 15px;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="font-size:0.85rem; color:var(--text-secondary);">该分类对应的数据源链接 (支持长链接检查)</label>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <input type="text" class="cat-source-input" value="${dataSource}" placeholder="填写该分类通用的数据源链接 (飞书URL)..." style="flex:1; margin-bottom:0;" oninput="triggerUrlValidation(this)">
+                            <div class="validation-status" style="width:200px; text-align:right;"></div>
+                        </div>
                     </div>
+                    <div class="cat-metrics-list" id="${catId}_metrics">
+                        ${metricsHtml}
+                    </div>
+                    <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="addNewMetricToCat('${catId}')">+ 增加一条指标</button>
                 </div>
-                <div class="cat-metrics-list" id="${catId}_metrics">
-                    ${metricsHtml}
-                </div>
-                <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.85rem;" onclick="addNewMetricToCat('${catId}')">+ 增加一条指标</button>
             `;
             container.appendChild(div);
             
@@ -1293,10 +1301,40 @@
             }
         }
 
+        function toggleCategoryDetails(catId) {
+            const content = document.getElementById(catId + '_content');
+            const icon = document.getElementById(catId + '_icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.style.transform = 'rotate(90deg)';
+            } else {
+                content.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function updateMetricCount(catId) {
+            const metricsContainer = document.getElementById(catId + '_metrics');
+            const countBadge = document.getElementById(catId + '_count');
+            if (metricsContainer && countBadge) {
+                const count = metricsContainer.querySelectorAll('.metric-row').length;
+                countBadge.innerText = count + ' 个指标';
+            }
+        }
+
+        function deleteMetricRow(btn) {
+            const catCard = btn.closest('.category-card');
+            btn.closest('.metric-row').remove();
+            if (catCard && catCard.dataset.catId) {
+                updateMetricCount(catCard.dataset.catId);
+            }
+        }
+
         function addNewMetricToCat(catId) {
             const metricsContainer = document.getElementById(catId + '_metrics');
             if (metricsContainer) {
                 metricsContainer.insertAdjacentHTML('beforeend', createMetricRowHtml('', {}));
+                updateMetricCount(catId);
             }
         }
 
