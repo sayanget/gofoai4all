@@ -1250,7 +1250,11 @@
                             <label style="font-size:0.8rem;">说明</label>
                             <textarea class="metric-desc auto-expand" rows="1" placeholder="规则业务说明" style="overflow-y: hidden; resize: none; width: 100%; box-sizing: border-box; padding: 12px 16px;">${desc}</textarea>
                         </div>
-                        <button class="btn delete-btn" style="padding:8px; margin-bottom:0;" onclick="deleteMetricRow(this)">删除</button>
+                        <button class="btn delete-btn" style="flex:none; padding:6px; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; margin-bottom:0;" onclick="deleteMetricRow(this)" title="删除指标">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             `;
@@ -1343,10 +1347,16 @@
         }
 
         function deleteMetricRow(btn) {
-            const catCard = btn.closest('.category-card');
-            btn.closest('.metric-row').remove();
-            if (catCard && catCard.dataset.catId) {
-                updateMetricCount(catCard.dataset.catId);
+            const row = btn.closest('.metric-row');
+            const nameInput = row.querySelector('.metric-name');
+            const name = nameInput ? nameInput.value.trim() : '';
+            const msg = name ? `确定要删除指标 [${name}] 吗？` : '确定要删除这条指标吗？';
+            if (confirm(msg)) {
+                const catCard = btn.closest('.category-card');
+                row.remove();
+                if (catCard && catCard.dataset.catId) {
+                    updateMetricCount(catCard.dataset.catId);
+                }
             }
         }
 
@@ -1444,8 +1454,12 @@
                     <label>标准装载票数/票数上限 (分母, 单位: 票)</label>
                     <input type="number" class="capacity-val" value="${cap}" placeholder="如：12000">
                 </div>
-                <div style="display:flex; align-items:flex-end;">
-                    <button class="btn btn-secondary delete-btn" style="height:46px; margin-bottom:20px; width:100%;" onclick="deleteRow(this)">删除</button>
+                <div style="display:flex; align-items:flex-end; justify-content:center;">
+                    <button class="btn delete-btn" style="flex:none; padding:6px; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; margin-bottom:24px;" onclick="deleteRow(this)" title="删除车型">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                        </svg>
+                    </button>
                 </div>
             `;
             capacityContainer.appendChild(row);
@@ -1456,9 +1470,17 @@
             const item = btn.closest('.rule-card-item') || btn.closest('.capacity-card-item');
             if (item) {
                 const isCapacity = item.classList.contains('capacity-card-item');
-                item.remove();
+                let name = '';
                 if (isCapacity) {
-                    updateCapacityCount();
+                    const input = item.querySelector('.capacity-vtype');
+                    if (input) name = input.value.trim();
+                }
+                const msg = name ? `确定要删除车型 [${name}] 吗？` : '确定要删除这条规则吗？';
+                if (confirm(msg)) {
+                    item.remove();
+                    if (isCapacity) {
+                        updateCapacityCount();
+                    }
                 }
             }
         }
@@ -2223,8 +2245,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="rule-card-actions" style="display:flex; justify-content:center;">
-                        <button class="btn btn-secondary delete-btn" style="width:100%;" onclick="deleteExtractedRow(this)">删除指标</button>
+                    <div class="rule-card-actions" style="display:flex; justify-content:center; align-items:center;">
+                        <button class="btn delete-btn" style="flex:none; padding:6px; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%;" onclick="deleteExtractedRow(this)" title="删除指标">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                            </svg>
+                        </button>
                     </div>
                 `;
                 metricsContainer.appendChild(row);
@@ -2245,8 +2271,12 @@
                         <label>财务装载容量 (V)</label>
                         <input type="number" class="ext-capacity-val" value="${cap}">
                     </div>
-                    <div style="display:flex; justify-content:center;">
-                        <button class="btn btn-secondary delete-btn" style="width:100%; margin-bottom:0;" onclick="deleteExtractedRow(this)">删除</button>
+                    <div style="display:flex; justify-content:center; align-items:center;">
+                        <button class="btn delete-btn" style="flex:none; padding:6px; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; margin-bottom:0;" onclick="deleteExtractedRow(this)" title="删除">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                            </svg>
+                        </button>
                     </div>
                 `;
                 capacityContainer.appendChild(row);
@@ -2289,8 +2319,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="rule-card-actions" style="display:flex; justify-content:center;">
-                    <button class="btn btn-secondary delete-btn" style="width:100%;" onclick="deleteExtractedRow(this)">删除指标</button>
+                <div class="rule-card-actions" style="display:flex; justify-content:center; align-items:center;">
+                    <button class="btn delete-btn" style="flex:none; padding:6px; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%;" onclick="deleteExtractedRow(this)" title="删除指标">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                        </svg>
+                    </button>
                 </div>
             `;
             metricsContainer.appendChild(row);
@@ -2309,8 +2343,12 @@
                     <label>财务装载容量 (V)</label>
                     <input type="number" class="ext-capacity-val" value="" placeholder="输入体积容量">
                 </div>
-                <div style="display:flex; justify-content:center;">
-                    <button class="btn btn-secondary delete-btn" style="width:100%; margin-bottom:0;" onclick="deleteExtractedRow(this)">删除</button>
+                <div style="display:flex; justify-content:center; align-items:center;">
+                    <button class="btn delete-btn" style="flex:none; padding:6px; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; margin-bottom:0;" onclick="deleteExtractedRow(this)" title="删除">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                        </svg>
+                    </button>
                 </div>
             `;
             capacityContainer.appendChild(row);
@@ -2318,7 +2356,21 @@
 
         function deleteExtractedRow(btnEl) {
             const cardItem = btnEl.closest('.rule-card-item') || btnEl.closest('.extracted-capacity-item');
-            if (cardItem) cardItem.remove();
+            if (cardItem) {
+                const isCapacity = cardItem.classList.contains('extracted-capacity-item');
+                let name = '';
+                if (isCapacity) {
+                    const input = cardItem.querySelector('.ext-capacity-name');
+                    if (input) name = input.value.trim();
+                } else {
+                    const input = cardItem.querySelector('.ext-metric-name');
+                    if (input) name = input.value.trim();
+                }
+                const msg = name ? `确定要删除提取项 [${name}] 吗？` : '确定要删除此提取项吗？';
+                if (confirm(msg)) {
+                    cardItem.remove();
+                }
+            }
         }
 
         function saveExtractedRulesToLibrary() {
