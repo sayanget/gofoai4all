@@ -1282,7 +1282,11 @@
                         <input type="text" class="cat-name-input" value="${catName}" placeholder="输入大分类名称 (如：TMS类指标)" style="font-size:1.1em; font-weight:bold; width:300px; margin-bottom:0;" onclick="event.stopPropagation()">
                         <span id="${catId}_count" style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; margin-left: 10px;">${metricCount} 个指标</span>
                     </div>
-                    <button class="btn delete-btn" style="margin-left:12px; padding:6px 12px;" onclick="event.stopPropagation(); this.closest('.category-card').remove()">删除分类</button>
+                    <button class="btn delete-btn" style="margin-left:12px; padding:6px; display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%;" onclick="event.stopPropagation(); deleteCategoryCard(this)" title="删除分类">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+                        </svg>
+                    </button>
                 </div>
                 
                 <div id="${catId}_content" style="display: none; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 15px; padding-top: 15px;">
@@ -1304,6 +1308,16 @@
             if (dataSource) {
                 const sourceInput = div.querySelector('.cat-source-input');
                 if (sourceInput) triggerUrlValidation(sourceInput);
+            }
+        }
+
+        function deleteCategoryCard(btn) {
+            const card = btn.closest('.category-card');
+            const catNameInput = card.querySelector('.cat-name-input');
+            const name = catNameInput ? catNameInput.value.trim() : '';
+            const msg = name ? `确定要删除大类 [${name}] 及其包含的所有指标吗？` : '确定要删除这个大类及其所有指标吗？';
+            if (confirm(msg)) {
+                card.remove();
             }
         }
 
