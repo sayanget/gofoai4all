@@ -474,8 +474,13 @@ def extract_rules():
                 text_content = data.get("text", "")
                 url = data.get("url", "")
             else:
-                text_content = request.form.get("text", "")
-                url = request.form.get("url", "")
+                text_content = request.form.get("text", "").strip()
+                url = request.form.get("url", "").strip()
+
+            # If text_content is just a URL, treat it as such
+            if text_content and not url and text_content.startswith("http") and not ("\n" in text_content or " " in text_content):
+                url = text_content
+                text_content = ""
 
         # Handle URL scraping
         if url and not text_content and not image_base64:
