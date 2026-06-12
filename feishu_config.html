@@ -2337,11 +2337,17 @@
             // 先记录当前滚动位置，防止跳动
             const scrollPos = window.scrollY;
             el.style.height = 'auto';
-            el.style.height = (el.scrollHeight) + 'px';
+            el.style.height = (el.scrollHeight + 10) + 'px'; // 增加 10px 缓冲确保完全显示
             window.scrollTo(0, scrollPos);
         }
 
         document.addEventListener('focusin', function(e) {
+            if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
+                autoResizeTextarea(e.target);
+            }
+        });
+
+        document.addEventListener('click', function(e) {
             if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
                 autoResizeTextarea(e.target);
             }
