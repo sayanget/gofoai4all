@@ -2353,15 +2353,65 @@
             }
         });
 
-        document.addEventListener('input', function(e) {
-            if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
-                autoResizeTextarea(e.target);
-            }
-        });
-
         document.addEventListener('focusout', function(e) {
             if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
                 e.target.style.height = ''; // 回复原始行数
+            }
+        });
+
+        // 同步相同名称的指标属性
+        function syncMetricsByName(sourceRow, changedElement) {
+            const nameInput = sourceRow.querySelector('.metric-name');
+            if (!nameInput) return;
+            const metricName = nameInput.value.trim();
+            if (!metricName) return;
+            
+            // 如果是正在修改名称本身，不同步（避免误操作把其它不同指标改名）
+            if (changedElement.classList.contains('metric-name')) return;
+
+            const level = sourceRow.querySelector('.metric-level').value;
+            const redline = sourceRow.querySelector('.metric-redline').value;
+            const redlineSlider = sourceRow.querySelector('.metric-redline-slider').value;
+            const desc = sourceRow.querySelector('.metric-desc').value;
+
+            const allRows = document.querySelectorAll('#rules_categories_list .metric-row');
+            allRows.forEach(otherRow => {
+                if (otherRow === sourceRow) return;
+                const otherNameInput = otherRow.querySelector('.metric-name');
+                if (otherNameInput && otherNameInput.value.trim() === metricName) {
+                    if (changedElement.classList.contains('metric-level')) {
+                        otherRow.querySelector('.metric-level').value = level;
+                    }
+                    if (changedElement.classList.contains('metric-redline') || changedElement.classList.contains('metric-redline-slider')) {
+                        otherRow.querySelector('.metric-redline').value = redline;
+                        otherRow.querySelector('.metric-redline-slider').value = redlineSlider;
+                    }
+                    if (changedElement.classList.contains('metric-desc')) {
+                        const descEl = otherRow.querySelector('.metric-desc');
+                        descEl.value = desc;
+                        autoResizeTextarea(descEl);
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('input', function(e) {
+            // 原有的 autoResizeTextarea 逻辑
+            if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
+                autoResizeTextarea(e.target);
+            }
+            
+            // 指标属性同步逻辑
+            const row = e.target.closest('.metric-row');
+            if (row && (e.target.classList.contains('metric-redline') || e.target.classList.contains('metric-redline-slider') || e.target.classList.contains('metric-desc'))) {
+                syncMetricsByName(row, e.target);
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            const row = e.target.closest('.metric-row');
+            if (row && e.target.classList.contains('metric-level')) {
+                syncMetricsByName(row, e.target);
             }
         });
 
