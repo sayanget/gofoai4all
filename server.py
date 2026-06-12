@@ -479,19 +479,28 @@ def extract_rules():
 
         # Handle URL scraping
         if url and not text_content and not image_base64:
-            try:
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                }
-                resp = requests.get(url, headers=headers, timeout=10, verify=False)
-                if resp.status_code == 200:
-                    html = resp.text
-                    html = re.sub(r"<script.*?>.*?</script>", "", html, flags=re.DOTALL | re.I)
-                    html = re.sub(r"<style.*?>.*?</style>", "", html, flags=re.DOTALL | re.I)
-                    text_content = re.sub(r"<.*?>", " ", html)
-                    text_content = re.sub(r"\s+", " ", text_content).strip()
-            except Exception as e:
-                logger.error(f"Error scraping URL for rule extraction: {e}")
+            if "feishu.cn/sheets/" in url or "feishu.cn/wiki/" in url:
+                try:
+                    from tools.tms_extractor import TMSExtractor
+                    e = TMSExtractor(url)
+                    df = e.fetch_feishu_sheet(url)
+                    text_content = df.to_csv(index=False)
+                except Exception as e:
+                    logger.error(f"Error scraping Feishu sheet for rule extraction: {e}")
+            else:
+                try:
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    }
+                    resp = requests.get(url, headers=headers, timeout=10, verify=False)
+                    if resp.status_code == 200:
+                        html = resp.text
+                        html = re.sub(r"<script.*?>.*?</script>", "", html, flags=re.DOTALL | re.I)
+                        html = re.sub(r"<style.*?>.*?</style>", "", html, flags=re.DOTALL | re.I)
+                        text_content = re.sub(r"<.*?>", " ", html)
+                        text_content = re.sub(r"\s+", " ", text_content).strip()
+                except Exception as e:
+                    logger.error(f"Error scraping URL for rule extraction: {e}")
 
         # If nothing is provided, return error
         if not text_content and not image_base64:
