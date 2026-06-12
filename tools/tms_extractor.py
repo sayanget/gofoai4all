@@ -108,6 +108,7 @@ class TMSExtractor:
                 "函数内部请实现对应的过滤逻辑并返回新的 df。如果无需过滤请直接 return df。\n"
                 "如果需要基于日期或月份筛选，请注意把相应的字符串列转为 datetime 对象后再过滤。过滤时处理好空值。\n"
                 "千万不要使用未导入的外部函数（如 empty() ），直接使用 pandas 自带的 df.empty 或 pd.isna()。\n"
+                "如果使用正则表达式，请务必使用 raw string (例如 r'CNO\\.') 以避免 SyntaxWarning。\n"
                 "你的输出必须只有纯 Python 代码，绝对不能包含 markdown 标记或任何其他文本！"
             )
             
