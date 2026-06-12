@@ -944,31 +944,37 @@
                 </div>
 
                 <!-- 车型载重定义 -->
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <h2>
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="1" y="3" width="15" height="13"/>
-                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-                                <circle cx="5.5" cy="18.5" r="2.5"/>
-                                <circle cx="18.5" cy="18.5" r="2.5"/>
-                            </svg>
-                            车型财务容量标准 (Vehicle Capacity)
-                        </h2>
+                <div class="glass-panel" style="padding-bottom: 0;">
+                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCapacityDetails()">
+                        <div style="display:flex; align-items:center; flex:1;">
+                            <span id="capacity_icon" style="transition: transform 0.3s; display:inline-block; font-size:12px; color:var(--text-secondary);">▶</span>
+                            <h2 style="margin: 0; margin-left: 12px; display: flex; align-items: center;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                                    <rect x="1" y="3" width="15" height="13"/>
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                                    <circle cx="5.5" cy="18.5" r="2.5"/>
+                                    <circle cx="18.5" cy="18.5" r="2.5"/>
+                                </svg>
+                                车型财务容量标准 (Vehicle Capacity)
+                            </h2>
+                            <span id="capacity_count" style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; margin-left: 15px;">0 个车型</span>
+                        </div>
                     </div>
                     
-                    <div id="rules_capacity_list">
-                        <!-- 动态渲染 -->
-                    </div>
-                    
-                    <div class="btn-group" style="margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="addNewCapacityRow()">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            新增车型与体积容量
-                        </button>
+                    <div id="capacity_content" style="display: none; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 15px; padding-top: 15px; padding-bottom: 20px;">
+                        <div id="rules_capacity_list">
+                            <!-- 动态渲染 -->
+                        </div>
+                        
+                        <div class="btn-group" style="margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="addNewCapacityRow()">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                新增车型与体积容量
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1390,6 +1396,27 @@
             }
         }
 
+        function toggleCapacityDetails() {
+            const content = document.getElementById('capacity_content');
+            const icon = document.getElementById('capacity_icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.style.transform = 'rotate(90deg)';
+            } else {
+                content.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function updateCapacityCount() {
+            const list = document.getElementById('rules_capacity_list');
+            const badge = document.getElementById('capacity_count');
+            if (list && badge) {
+                const count = list.querySelectorAll('.capacity-card-item').length;
+                badge.innerText = count + ' 个车型';
+            }
+        }
+
         function addNewCapacityRow(vType='', cap='') {
             const capacityContainer = document.getElementById('rules_capacity_list');
             const row = document.createElement('div');
@@ -1408,12 +1435,17 @@
                 </div>
             `;
             capacityContainer.appendChild(row);
+            updateCapacityCount();
         }
 
         function deleteRow(btn) {
             const item = btn.closest('.rule-card-item') || btn.closest('.capacity-card-item');
             if (item) {
+                const isCapacity = item.classList.contains('capacity-card-item');
                 item.remove();
+                if (isCapacity) {
+                    updateCapacityCount();
+                }
             }
         }
 
