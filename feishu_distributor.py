@@ -34,15 +34,17 @@ class FeishuDistributor:
         header_color = color_map.get(status, "blue")
 
         # 2. 组装指标快览 markdown 表格
-        metrics_markdown = "**指标快览：**\n| 指标名称 | 实际数值 | 判定状态 | 规则拦截与备注 |\n| :--- | :---: | :---: | :--- |\n"
+        metrics_markdown = "**📊 核心指标表现：**\n| 指标名称 | 实际数值 | 判定状态 |\n| :--- | :---: | :---: |\n"
         for m in report.get("metrics_display", []):
             name = m.get("name", "")
             val = m.get("value", "")
             m_status = m.get("status", "正常")
-            rule_triggered = m.get("rule_triggered", "")
             
             icon = "🔴" if m_status == "异常" else "🟢"
-            metrics_markdown += f"| {icon} {name} | `{val}` | {m_status} | {rule_triggered} |\n"
+            val_display = f"**{val}**" if m_status == "异常" else val
+            m_status_display = f"**{m_status}**" if m_status == "异常" else m_status
+            
+            metrics_markdown += f"| {icon} **{name}** | {val_display} | {m_status_display} |\n"
 
         # 3. 组装诊断结论 & 改善建议 markdown 列表
         diagnosis_items = []

@@ -1333,7 +1333,7 @@
                         </div>
                         <div class="form-group">
                             <label>规则描述说明</label>
-                            <textarea class="metric-desc" rows="1" placeholder="规则判断的业务说明">${description}</textarea>
+                            <textarea class="metric-desc auto-expand" rows="1" placeholder="规则判断的业务说明" style="overflow-y: hidden; resize: none;">${description}</textarea>
                         </div>
                     </div>
                 </div>
@@ -2135,7 +2135,7 @@
                             </div>
                             <div class="form-group">
                                 <label>规则描述说明</label>
-                                <textarea class="ext-metric-desc" rows="1">${meta.description || ''}</textarea>
+                                <textarea class="ext-metric-desc auto-expand" rows="1" style="overflow-y: hidden; resize: none;">${meta.description || ''}</textarea>
                             </div>
                         </div>
                     </div>
@@ -2201,7 +2201,7 @@
                         </div>
                         <div class="form-group">
                             <label>规则描述说明</label>
-                            <textarea class="ext-metric-desc" rows="1" placeholder="业务判断说明"></textarea>
+                            <textarea class="ext-metric-desc auto-expand" rows="1" placeholder="业务判断说明" style="overflow-y: hidden; resize: none;"></textarea>
                         </div>
                     </div>
                 </div>
@@ -2331,6 +2331,34 @@
                 notif.classList.remove('show');
             }, 2000);
         }
+
+        // 统一处理 Textarea 自动撑开
+        function autoResizeTextarea(el) {
+            // 先记录当前滚动位置，防止跳动
+            const scrollPos = window.scrollY;
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+            window.scrollTo(0, scrollPos);
+        }
+
+        document.addEventListener('focusin', function(e) {
+            if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
+                autoResizeTextarea(e.target);
+            }
+        });
+
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
+                autoResizeTextarea(e.target);
+            }
+        });
+
+        document.addEventListener('focusout', function(e) {
+            if (e.target && e.target.tagName === 'TEXTAREA' && e.target.classList.contains('auto-expand')) {
+                e.target.style.height = ''; // 回复原始行数
+            }
+        });
+
     </script>
 </body>
 </html>

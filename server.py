@@ -513,9 +513,9 @@ def extract_rules():
         if not api_base:
             api_base = "https://api.openai.com/v1"
 
-        api_configured = bool(api_key)
+        api_configured = bool(api_key) or bool(api_base)
         error_detail = None
-
+        
         # Dynamically query supported models and fall back if target model is not in list
         if api_key:
             try:
@@ -558,9 +558,10 @@ def extract_rules():
 
         extracted_rules = None
         using_mock = False
-
-        if api_key:
+        
+        if api_configured:
             try:
+                # 您的本地 8085 代理是 Gemini 官方协议代理，所以必须走 Google GenAI SDK！
                 if "gemini" in model.lower():
                     from google import genai
                     from google.genai import types
@@ -619,9 +620,10 @@ def extract_rules():
                         messages.append({"role": "user", "content": f"请分析以下文本，提取其中的物流考核指标规则与车型容积配置：\n{text_content}"})
     
                     headers = {
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {api_key}"
+                        "Content-Type": "application/json"
                     }
+                    if api_key:
+                        headers["Authorization"] = f"Bearer {api_key}"
                     payload = {
                         "model": model,
                         "messages": messages,

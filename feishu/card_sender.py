@@ -43,8 +43,7 @@ def send_feishu_card(agent_output: Dict[str, Any], webhook_url: str, secret: str
         "columns": [
             {"name": "name", "display_name": "指标名称", "width": "auto", "data_type": "lark_md"},
             {"name": "val", "display_name": "实际数值", "width": "auto", "data_type": "lark_md"},
-            {"name": "status", "display_name": "判定状态", "width": "auto", "data_type": "lark_md"},
-            {"name": "rule", "display_name": "规则拦截与备注", "width": "auto", "data_type": "lark_md"}
+            {"name": "status", "display_name": "判定状态", "width": "auto", "data_type": "lark_md"}
         ],
         "rows": []
     }
@@ -53,16 +52,14 @@ def send_feishu_card(agent_output: Dict[str, Any], webhook_url: str, secret: str
         name = m.get("name", "")
         val = m.get("value", "")
         m_status = m.get("status", "正常")
-        rule_triggered = m.get("rule_triggered", "")
         icon = "🔴" if m_status == "异常" else "🟢"
         status_text = f"<font color='red'>**{m_status}**</font>" if m_status == "异常" else f"<font color='green'>{m_status}</font>"
-        val_text = f"**{val}**"
+        val_text = f"**{val}**" if m_status == "异常" else f"{val}"
         
         metrics_table["rows"].append({
             "name": f"{icon} {name}",
             "val": val_text,
-            "status": status_text,
-            "rule": rule_triggered
+            "status": status_text
         })
     
     # 3. 组装诊断结论 & 改善建议 markdown (采用引言块/引用块，使其极具层次感)
@@ -79,6 +76,8 @@ def send_feishu_card(agent_output: Dict[str, Any], webhook_url: str, secret: str
         suggestions_items.append(f"> 💡 **行动建议 {i}**: {s}")
     suggestions_content = "\n>\n".join(suggestions_items) if suggestions_items else "> *无需额外改善动作*"
 
+    title_content = f"{title} ({date_str})" if date_str else title
+
     # 4. 构造飞书 Card Payload
     payload = {
         "msg_type": "interactive",
@@ -89,7 +88,7 @@ def send_feishu_card(agent_output: Dict[str, Any], webhook_url: str, secret: str
             "header": {
                 "title": {
                     "tag": "plain_text",
-                    "content": f"{title} ({date_str})"
+                    "content": title_content
                 },
                 "template": header_color
             },

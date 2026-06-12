@@ -249,6 +249,8 @@ class LLMAnalyzer:
                 if key not in data:
                     raise KeyError(f"Missing key: {key}")
             
+            data = self._inject_remarks(data)
+            
             # 保存到缓存
             try:
                 with open(cache_path, "w", encoding="utf-8") as f:
@@ -350,10 +352,30 @@ class LLMAnalyzer:
             for key in required_keys:
                 if key not in data:
                     raise KeyError(f"Missing key: {key}")
+                    
+            data = self._inject_remarks(data)
             return data
         except Exception as e:
             logger.error(f"JSON 解析或验证失败: {e}，原始内容: {raw_text}")
             return self._heuristic_mock_analysis(metrics, exceptions)
+
+    def _inject_remarks(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        向 metrics_display 结果中注入静态规则的备注说明
+        """
+        try:
+            import rules_config
+            for m in data.get("metrics_display", []):
+                name = m.get("name", "")
+                remark = rules_config.METRICS_CONFIG.get(name, {}).get("description", "")
+                if remark:
+                    current = m.get("rule_triggered", "")
+                    if f"备注：{remark}" not in current:
+                        # Append the remark text
+                        m["rule_triggered"] = f"{current}（备注：{remark}）".strip("（） ")
+        except Exception as e:
+            logger.warning(f"注入指标备注失败: {e}")
+        return data
 
     def _heuristic_mock_analysis(self, metrics: Dict[str, Any], exceptions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -378,11 +400,16 @@ class LLMAnalyzer:
             if name not in rules_config.METRICS_CONFIG:
                 continue
             rate_str = f"{val['rate']*100:.1f}%" if "rate" in val else "100.0%"
+            
+            remark = rules_config.METRICS_CONFIG[name].get("description", "")
+            base_rule = "触发考核指标未达标拦截规则" if val.get("status") == "异常" else "符合正常运作要求"
+            rule_text = f"{base_rule}（备注：{remark}）" if remark else base_rule
+            
             metrics_display.append({
                 "name": name,
                 "value": rate_str,
                 "status": "异常" if val.get("status") == "异常" else "正常",
-                "rule_triggered": "触发考核指标未达标拦截规则" if val.get("status") == "异常" else "符合正常运作要求"
+                "rule_triggered": rule_text
             })
 
         diagnosis_details = []
