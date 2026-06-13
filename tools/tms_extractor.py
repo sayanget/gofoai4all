@@ -36,6 +36,9 @@ class TMSExtractor:
                     # 尝试根据用户的自定义提示词，动态使用大模型生成 Pandas 过滤条件
                     df = self._apply_dynamic_prompt_filter(df)
                     
+                    if len(df) == 0:
+                        raise ValueError("根据提示词筛选后的数据条数为 0，请检查飞书表格数据或筛选条件。中止向 AI 提交分析。")
+                    
                     res = self._map_feishu_data(df.to_dict(orient="records"))
                     res["_total_rows"] = len(df)
                     res["_raw_sample"] = df.head(5).to_dict(orient="records")
