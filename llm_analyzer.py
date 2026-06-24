@@ -177,13 +177,14 @@ class LLMAnalyzer:
             "prompt": prompt
         }
         cache_path = self._get_cache_path(cache_payload)
-        if os.path.exists(cache_path):
-            try:
-                with open(cache_path, "r", encoding="utf-8") as f:
-                    logger.info("命中本地 Payload 哈希缓存，直接返回已生成的报告。")
-                    return json.load(f)
-            except Exception as e:
-                logger.warning(f"读取本地缓存失败: {e}")
+        # 禁用读缓存，每次强制调用大模型
+        # if os.path.exists(cache_path):
+        #     try:
+        #         with open(cache_path, "r", encoding="utf-8") as f:
+        #             logger.info("命中本地 Payload 哈希缓存，直接返回已生成的报告。")
+        #             return json.load(f)
+        #     except Exception as e:
+        #         logger.warning(f"读取本地缓存失败: {e}")
 
         try:
             raw_content = self._call_llm(system_prompt, prompt)
@@ -232,13 +233,14 @@ class LLMAnalyzer:
             "prompt": prompt
         }
         cache_path = self._get_cache_path(cache_payload)
-        if os.path.exists(cache_path):
-            try:
-                with open(cache_path, "r", encoding="utf-8") as f:
-                    logger.info("命中本地 Iterate 哈希缓存，直接返回迭代报告。")
-                    return json.load(f)
-            except Exception as e:
-                logger.warning(f"读取本地缓存失败: {e}")
+        # 禁用读缓存，每次强制调用大模型
+        # if os.path.exists(cache_path):
+        #     try:
+        #         with open(cache_path, "r", encoding="utf-8") as f:
+        #             logger.info("命中本地 Iterate 哈希缓存，直接返回迭代报告。")
+        #             return json.load(f)
+        #     except Exception as e:
+        #         logger.warning(f"读取本地缓存失败: {e}")
         try:
             raw_content = self._call_llm(system_prompt, prompt)
             

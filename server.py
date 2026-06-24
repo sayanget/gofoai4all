@@ -601,7 +601,8 @@ def extract_rules():
                             ],
                             config=types.GenerateContentConfig(
                                 system_instruction=system_prompt,
-                                temperature=0.1
+                                temperature=0.1,
+                                response_mime_type="application/json"
                             )
                         )
                     else:
@@ -611,7 +612,8 @@ def extract_rules():
                             contents=prompt,
                             config=types.GenerateContentConfig(
                                 system_instruction=system_prompt,
-                                temperature=0.1
+                                temperature=0.1,
+                                response_mime_type="application/json"
                             )
                         )
                     
@@ -653,11 +655,22 @@ def extract_rules():
                     result_json = resp.json()
                     raw_content = result_json["choices"][0]["message"]["content"].strip()
 
-                if raw_content.startswith("```"):
-                    lines = raw_content.splitlines()
-                    if lines[0].startswith("```json") or lines[0].startswith("```"):
-                        raw_content = "\n".join(lines[1:-1])
-                raw_content = raw_content.strip()
+                import re
+                
+                # Robustly extract JSON block using regex
+                match = re.search(r'```(?:json)?(.*?)```', raw_content, re.DOTALL)
+                if match:
+                    raw_content = match.group(1).strip()
+                else:
+                    raw_content = raw_content.strip()
+                    if raw_content.startswith("```json"):
+                        raw_content = raw_content[7:].strip()
+                    if raw_content.endswith("```"):
+                        raw_content = raw_content[:-3].strip()
+
+                logger.info(f"Raw LLM Content after cleaning: {repr(raw_content)}")
+                if not raw_content:
+                    raise ValueError("Cleaned raw_content is empty. Original response was likely empty or just contained markdown fences.")
                 extracted_rules = json.loads(raw_content)
 
             except Exception as e:

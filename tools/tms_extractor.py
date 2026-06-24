@@ -197,8 +197,8 @@ class TMSExtractor:
             if not spreadsheet_token:
                 raise ValueError("无法从 Wiki 节点中解析出底层的表格 Token。")
         # 使用读取单个工作表的接口
-        sheet_url = f"https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/{spreadsheet_token}/values/{sheet_id}"
-        sheet_res = requests.get(sheet_url, headers=headers, timeout=10)
+        sheet_url = f"https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/{spreadsheet_token}/values/{sheet_id}?valueRenderOption=FormattedValue"
+        sheet_res = requests.get(sheet_url, headers=headers, timeout=60)
         sheet_res.raise_for_status()
         
         sheet_data = sheet_res.json()
@@ -213,9 +213,13 @@ class TMSExtractor:
         columns = values[0]
         data_rows = values[1:]
         
-        # 补齐或裁剪长度以匹配 columns
+        # 补齐或裁剪长度以匹配 columns，并过滤掉飞书返回的大量空行幻觉
         processed_rows = []
         for row in data_rows:
+            # 检查是否为全空行
+            if all(cell is None or str(cell).strip() == "" for cell in row):
+                continue
+                
             if len(row) < len(columns):
                 row.extend([None] * (len(columns) - len(row)))
             elif len(row) > len(columns):
@@ -248,12 +252,12 @@ class TMSExtractor:
         unloading_timeliness = []
         
         for row in feishu_rows:
-            trip_id = row.get("运输任务编码", "Unknown")
+            trip_id = row.get("运输任务编码") or row.get("运输任务编号", "Unknown")
             
-            plan_dep = excel_to_dt(row.get("计划发车时间(本地时区)"))
-            act_dep = excel_to_dt(row.get("实际发车时间(本地时区)"))
-            plan_arr = excel_to_dt(row.get("计划到车时间(本地时区)"))
-            act_arr = excel_to_dt(row.get("实际到车时间(本地时区)"))
+            plan_dep = excel_to_dt(row.get("计划发车时间(本地时区)") or row.get("计划发车时间(本地时间)"))
+            act_dep = excel_to_dt(row.get("实际发车时间(本地时区)") or row.get("实际发车时间(本地时间)"))
+            plan_arr = excel_to_dt(row.get("计划到车时间(本地时区)") or row.get("计划到车时间(本地时间)"))
+            act_arr = excel_to_dt(row.get("实际到车时间(本地时区)") or row.get("实际到车时间(本地时间)"))
             route = row.get("发车路段", "")
             departure_loc = row.get("车辆出发地", "")
             arrival_loc = row.get("车辆到达地", "")
@@ -281,29 +285,32 @@ class TMSExtractor:
                     "prev_station_departure": act_dep
                 })
                 
+                # Try both unloading scan columns
+                unloading_scan = excel_to_dt(row.get("最小卸车签入时间(本地时区)") or row.get("最早卸车签入时间（本地时区）/卸车扫描第一枪时间"))
+                # Try bags qty columns
+                bags_qty = row.get("卸车签入袋号数") or row.get("装车签出袋号数", 10)
+                
                 unloading_timeliness.append({
                     **row,
                     "trip_id": trip_id,
                     "actual_arrival": act_arr,
-                    "first_unloading_scan": excel_to_dt(row.get("最小卸车签入时间(本地时区)")),
+                    "first_unloading_scan": unloading_scan,
                     "has_inbound_manifest": True,
-                    "loaded_bags_qty": row.get("装车签出袋号数", 10),
+                    "loaded_bags_qty": bags_qty,
                     "route_name": route,
                     "origin": departure_loc,
                     "destination": arrival_loc
                 })
 
-        mock = self._get_fallback_mock_data()
-        
-        # 仅当成功解析出数据时，才覆盖 mock
-        if dispatch_punctuality:
-            mock["dispatch_punctuality"] = dispatch_punctuality
-        if arrival_punctuality:
-            mock["arrival_punctuality"] = arrival_punctuality
-        if unloading_timeliness:
-            mock["unloading_timeliness"] = unloading_timeliness
-            
-        return mock
+        return {
+            "dispatch_punctuality": dispatch_punctuality,
+            "route_load_rate": [],
+            "duration_qualification": [],
+            "arrival_punctuality": arrival_punctuality,
+            "shift_dispatch_timeliness": [],
+            "tms_operation_rate": [],
+            "unloading_timeliness": unloading_timeliness
+        }
 
     def _parse_extracted_dfs(self, raw_sheets_data: dict) -> dict:
         """
